@@ -1,0 +1,8 @@
+scopeconfig:
+- scope: node
+allowed_patterns:
+- /codegouvfr/react-dsfr/blob/.*
+- (?i).*key.*
+- token
+threshold: medium
+version: "1.0"

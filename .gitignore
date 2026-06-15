@@ -1,0 +1,48 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+/test-results
+
+# vite
+/dist
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.idea/
+.history/
+.vscode/settings.json
+
+# working tools
+*.backUp
+*.old
+.tmp
+
+# typescript
+tsconfig.tsbuildinfo
+
+# local AI config
+.ai/config.local.jsonc
+.ai/.version-check
