@@ -1,5 +1,5 @@
 {
-  "name": "france-chaleur-urbaine-ifpen",
+  "name": "france-chaleur-urbaine-pac",
   "version": "0.1.0",
   "private": false,
   "engines": {
@@ -7,16 +7,16 @@
     "pnpm": "10"
   },
   "type": "module",
-  "description": "Comparateur IFPEN basé sur Vite, React, React DSFR et les règles publicodes France Chaleur Urbaine.",
+  "description": "Comparateur PAC basé sur Vite, React et les règles publicodes France Chaleur Urbaine.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/incubateur-ademe/france-chaleur-urbaine-ifpen.git"
+    "url": "git+https://github.com/incubateur-ademe/france-chaleur-urbaine-pac.git"
   },
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/incubateur-ademe/france-chaleur-urbaine-ifpen/issues"
+    "url": "https://github.com/incubateur-ademe/france-chaleur-urbaine-pac/issues"
   },
-  "homepage": "https://github.com/incubateur-ademe/france-chaleur-urbaine-ifpen#readme",
+  "homepage": "https://github.com/incubateur-ademe/france-chaleur-urbaine-pac#readme",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "pnpm ts && vite build",

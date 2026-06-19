@@ -1,6 +1,6 @@
 # Git Workflow
 
-- Repository target: `https://github.com/incubateur-ademe/france-chaleur-urbaine-ifpen`.
+- Repository target: `https://github.com/incubateur-ademe/france-chaleur-urbaine-pac`.
 - Default branch: `main`.
 - Branch names: descriptive, no mandatory prefix.
 - Commits: explain the why, not only the what.

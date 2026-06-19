@@ -1,6 +1,6 @@
-# France Chaleur Urbaine IFPEN
+# France Chaleur Urbaine PAC MI
 
-Prototype Vite + React + React DSFR consommant le paquet `@betagouv/france-chaleur-urbaine-publicodes`.
+Prototype Vite + React consommant le paquet `@betagouv/france-chaleur-urbaine-publicodes`.
 
 ## Prérequis
 
@@ -18,4 +18,4 @@ pnpm test
 pnpm build
 ```
 
-Le dépôt GitHub cible est `https://github.com/incubateur-ademe/france-chaleur-urbaine-ifpen`.
+Le dépôt GitHub cible est `https://github.com/incubateur-ademe/france-chaleur-urbaine-pac`.

@@ -1,9 +1,12 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import type { RuleName } from '@betagouv/france-chaleur-urbaine-publicodes';
+import publicodesRules from '@betagouv/france-chaleur-urbaine-publicodes';
+import Engine from 'publicodes';
+import { type FormEvent, useEffect, useState } from 'react';
 
 const DPE_VALUES = ['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const;
-const INCOME_CATEGORY_VALUES = ['very_low', 'low', 'middle', 'high'] as const;
-const ILE_DE_FRANCE_DEPARTMENTS = new Set(['75', '77', '78', '91', '92', '93', '94', '95']);
+const INCOME_CATEGORY_VALUES = ['Très modeste', 'Modeste', 'Intermédiaire', 'Supérieur'] as const;
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
+const DEFAULT_TEMPERATURE_REFERENCE = -7;
 
 type Dpe = (typeof DPE_VALUES)[number];
 type IncomeCategory = (typeof INCOME_CATEGORY_VALUES)[number];
@@ -35,9 +38,35 @@ type SimulationResult = {
   oilBoilerAnnualBill: number;
   gasBoilerAnnualBill: number;
   heatPumpAnnualBill: number;
+  heatingModeComparisons: HeatingModeComparison[];
+  heatPumpBoilerReplacementBonus: number;
   heatPumpGrossPrice: number;
+  heatPumpMaprimerenovAid: number;
   heatPumpNetPrice: number;
   heatPumpProposedPower: number;
+};
+
+type HeatingCostBreakdown = {
+  label: string;
+  p1: number;
+  p2: number;
+  p4: number;
+};
+
+type ApiSimulationResult = Omit<SimulationResult, 'heatingModeComparisons'> & {
+  heatingCostBreakdowns: HeatingCostBreakdown[];
+};
+
+type HeatingModeComparison = {
+  co2: number;
+  label: string;
+  p1: number;
+};
+
+type IncomeOption = {
+  help: string;
+  label: string;
+  value: IncomeCategory;
 };
 
 type FormState = {
@@ -52,62 +81,49 @@ type FormState = {
 const INITIAL_FORM_STATE = {
   address: '',
   dpe: 'D',
-  incomeCategory: 'low',
+  incomeCategory: 'Modeste',
   occupants: '2',
   selectedAddress: null,
   surface: '90',
 } satisfies FormState;
 
-const INCOME_LABELS = {
-  high: 'Supérieurs',
-  low: 'Modestes',
-  middle: 'Intermédiaires',
-  very_low: 'Très modestes',
-} satisfies Record<IncomeCategory, string>;
+const PUBLICODES_ENGINE_OPTIONS = {
+  logger: {
+    error: () => undefined,
+    log: () => undefined,
+    warn: () => undefined,
+  },
+};
 
-const INCOME_THRESHOLDS = {
-  ileDeFrance: {
-    low: [28933, 42463, 51000, 59549, 68098],
-    middle: [40404, 59394, 71060, 83637, 95631],
-    very_low: [23768, 34884, 41893, 48914, 55961],
+const HEATING_MODE_RULES = [
+  {
+    co2RuleName: 'env . Installation x PAC air-eau x Individuel . Total',
+    label: 'PAC air/eau',
   },
-  other: {
-    low: [22015, 32197, 38719, 45234, 51775],
-    middle: [30844, 45340, 54592, 63844, 75094],
-    very_low: [17173, 25115, 30206, 35285, 40388],
+  {
+    co2RuleName: 'env . Installation x Gaz indiv avec cond x Individuel . Total',
+    label: 'Chaudière gaz condensation',
   },
-} as const;
+  {
+    co2RuleName: 'env . Installation x Fioul indiv x Individuel . Total',
+    label: 'Chaudière fioul',
+  },
+] as const satisfies {
+  co2RuleName: RuleName;
+  label: string;
+}[];
 
-const ADDITIONAL_PERSON_THRESHOLDS = {
-  ileDeFrance: {
-    low: 8568,
-    middle: 11995,
-    very_low: 6970,
-  },
-  other: {
-    low: 6525,
-    middle: 11254,
-    very_low: 5094,
-  },
-} as const;
-
-/**
- * Main IFPEN simulator form.
- */
 export function App() {
   const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE);
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [incomeOptions, setIncomeOptions] = useState<IncomeOption[]>([]);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [isIncomeOptionsLoading, setIsIncomeOptionsLoading] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const occupants = Number(formState.occupants);
-  const isIleDeFrance = formState.selectedAddress ? ILE_DE_FRANCE_DEPARTMENTS.has(formState.selectedAddress.departmentCode) : false;
-  const incomeOptions = useMemo(
-    () => getIncomeOptions(Number.isFinite(occupants) ? occupants : 1, isIleDeFrance),
-    [isIleDeFrance, occupants]
-  );
 
   useEffect(() => {
     setErrorMessage(null);
@@ -146,6 +162,53 @@ export function App() {
     return () => abortController.abort();
   }, [formState.address]);
 
+  useEffect(() => {
+    if (!formState.selectedAddress || !Number.isFinite(occupants) || occupants < 1) {
+      setIncomeOptions([]);
+      setIsIncomeOptionsLoading(false);
+      return;
+    }
+
+    const abortController = new AbortController();
+    setIsIncomeOptionsLoading(true);
+    setErrorMessage(null);
+
+    fetch(`${import.meta.env.VITE_FCU_API_BASE_URL ?? DEFAULT_API_BASE_URL}/api/pac/income-options`, {
+      body: JSON.stringify({
+        departmentCode: formState.selectedAddress.departmentCode,
+        occupants: Math.floor(occupants),
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      signal: abortController.signal,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Erreur API');
+        }
+        return response.json() as Promise<IncomeOption[]>;
+      })
+      .then((options) => {
+        setIncomeOptions(options);
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        setIncomeOptions([]);
+        setErrorMessage('Les catégories de revenus sont momentanément indisponibles.');
+      })
+      .finally(() => {
+        if (!abortController.signal.aborted) {
+          setIsIncomeOptionsLoading(false);
+        }
+      });
+
+    return () => abortController.abort();
+  }, [formState.selectedAddress, occupants]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setResult(null);
@@ -156,13 +219,15 @@ export function App() {
       return;
     }
 
+    const selectedAddress = formState.selectedAddress;
+
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_FCU_API_BASE_URL ?? DEFAULT_API_BASE_URL}/api/ifpen/heating-simulation`, {
+      const response = await fetch(`${import.meta.env.VITE_FCU_API_BASE_URL ?? DEFAULT_API_BASE_URL}/api/pac/simulation`, {
         body: JSON.stringify({
-          cityCode: formState.selectedAddress.cityCode,
-          departmentCode: formState.selectedAddress.departmentCode,
+          cityCode: selectedAddress.cityCode,
+          departmentCode: selectedAddress.departmentCode,
           dpe: formState.dpe,
           incomeCategory: formState.incomeCategory,
           occupants: Number(formState.occupants),
@@ -178,7 +243,12 @@ export function App() {
         throw new Error('Erreur API');
       }
 
-      setResult((await response.json()) as SimulationResult);
+      const apiResult = (await response.json()) as ApiSimulationResult;
+
+      setResult({
+        ...apiResult,
+        heatingModeComparisons: getHeatingModeComparisons(apiResult.heatingCostBreakdowns, formState, selectedAddress),
+      });
     } catch {
       setErrorMessage('Le calcul est momentanément indisponible.');
     } finally {
@@ -189,7 +259,7 @@ export function App() {
   return (
     <main className="fr-container app-shell">
       <section className="fr-py-6w">
-        <h1>Comparateur IFPEN</h1>
+        <h1>Comparateur PAC</h1>
         <p className="fr-text--lead">Renseignez le logement pour estimer la puissance, le coût net d’aides et les factures comparées.</p>
       </section>
 
@@ -250,8 +320,8 @@ export function App() {
                     onChange={() => setFormState((previousState) => ({ ...previousState, dpe: dpeValue }))}
                     type="radio"
                   />
-                  <label className={`fr-label dpe-tag dpe-${dpeValue.toLowerCase()}`} htmlFor={`dpe-${dpeValue}`}>
-                    {dpeValue}
+                  <label className="fr-label" htmlFor={`dpe-${dpeValue}`}>
+                    <span className={`dpe-tag dpe-${dpeValue.toLowerCase()}`}>{dpeValue}</span>
                   </label>
                 </div>
               ))}
@@ -293,22 +363,27 @@ export function App() {
 
           <fieldset className="fr-fieldset">
             <legend className="fr-fieldset__legend">Catégorie de revenus MaPrimeRénov’</legend>
-            <p className="fr-hint-text">Les plafonds affichés s’adaptent à la zone détectée et au nombre de personnes du ménage.</p>
-            {incomeOptions.map((incomeOption) => (
-              <div className="fr-radio-group" key={incomeOption.value}>
-                <input
-                  checked={formState.incomeCategory === incomeOption.value}
-                  id={`income-${incomeOption.value}`}
-                  name="incomeCategory"
-                  onChange={() => setFormState((previousState) => ({ ...previousState, incomeCategory: incomeOption.value }))}
-                  type="radio"
-                />
-                <label className="fr-label" htmlFor={`income-${incomeOption.value}`}>
-                  {incomeOption.label}
-                  <span className="fr-hint-text">{incomeOption.help}</span>
-                </label>
-              </div>
-            ))}
+            <div className="income-options">
+              {isIncomeOptionsLoading && <p className="fr-hint-text">Chargement des plafonds de revenus…</p>}
+              {!formState.selectedAddress && (
+                <p className="fr-hint-text">Sélectionnez une adresse pour afficher les plafonds applicables.</p>
+              )}
+              {incomeOptions.map((incomeOption) => (
+                <div className="fr-radio-group" key={incomeOption.value}>
+                  <input
+                    checked={formState.incomeCategory === incomeOption.value}
+                    id={`income-${incomeOption.value}`}
+                    name="incomeCategory"
+                    onChange={() => setFormState((previousState) => ({ ...previousState, incomeCategory: incomeOption.value }))}
+                    type="radio"
+                  />
+                  <label className="fr-label" htmlFor={`income-${incomeOption.value}`}>
+                    {incomeOption.label}
+                    <span className="fr-hint-text">{incomeOption.help}</span>
+                  </label>
+                </div>
+              ))}
+            </div>
           </fieldset>
 
           {errorMessage && (
@@ -348,11 +423,14 @@ function Results({ result }: ResultsProps) {
       <dl className="result-list">
         <ResultRow label="Puissance PAC air/eau proposée" value={`${formatNumber(result.heatPumpProposedPower)} kW`} />
         <ResultRow label="Prix PAC air/eau brut" value={formatCurrency(result.heatPumpGrossPrice)} />
+        <ResultRow label="Aide MaPrimeRénov’ PAC air/eau" value={formatCurrency(result.heatPumpMaprimerenovAid)} />
+        <ResultRow label="Coup de pouce remplacement chaudière" value={formatCurrency(result.heatPumpBoilerReplacementBonus)} />
         <ResultRow label="Prix PAC air/eau net" value={formatCurrency(result.heatPumpNetPrice)} />
         <ResultRow label="Facture PAC air/eau" value={`${formatCurrency(result.heatPumpAnnualBill)} / an`} />
         <ResultRow label="Facture chaudière gaz" value={`${formatCurrency(result.gasBoilerAnnualBill)} / an`} />
         <ResultRow label="Facture chaudière fioul" value={`${formatCurrency(result.oilBoilerAnnualBill)} / an`} />
       </dl>
+      <HeatingModeChart comparisons={result.heatingModeComparisons} />
     </section>
   );
 }
@@ -374,6 +452,42 @@ function ResultRow({ label, value }: ResultRowProps) {
   );
 }
 
+type HeatingModeChartProps = {
+  comparisons: HeatingModeComparison[];
+};
+
+function HeatingModeChart({ comparisons }: HeatingModeChartProps) {
+  const maxP1 = Math.max(...comparisons.map((comparison) => comparison.p1), 1);
+  const maxCo2 = Math.max(...comparisons.map((comparison) => comparison.co2), 1);
+
+  return (
+    <section className="cost-chart" aria-labelledby="cost-chart-title">
+      <h3 id="cost-chart-title">Comparaison énergie et CO2</h3>
+      <div className="chart-legend" aria-hidden="true">
+        <span>
+          <i className="legend-swatch p1" /> P1
+        </span>
+        <span>
+          <i className="legend-swatch co2" /> CO2
+        </span>
+      </div>
+      <div className="chart-bars">
+        {comparisons.map((comparison) => (
+          <div className="chart-group" key={comparison.label}>
+            <div className="chart-pair">
+              <div className="chart-bar p1" style={{ height: `${Math.max((comparison.p1 / maxP1) * 100, 2)}%` }} />
+              <div className="chart-bar co2" style={{ height: `${Math.max((comparison.co2 / maxCo2) * 100, 2)}%` }} />
+            </div>
+            <strong>{comparison.label}</strong>
+            <span>{formatCurrency(comparison.p1)} / an</span>
+            <small>CO2 {formatCo2(comparison.co2)} / an</small>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function toAddressSuggestion(feature: BanFeature): AddressSuggestion {
   return {
     city: feature.properties.city,
@@ -386,43 +500,45 @@ function toAddressSuggestion(feature: BanFeature): AddressSuggestion {
   };
 }
 
-function getIncomeOptions(occupants: number, isIleDeFrance: boolean) {
-  const zone = isIleDeFrance ? 'ileDeFrance' : 'other';
-  const veryLowThreshold = getIncomeThreshold(zone, occupants, 'very_low');
-  const lowThreshold = getIncomeThreshold(zone, occupants, 'low');
-  const middleThreshold = getIncomeThreshold(zone, occupants, 'middle');
+function getHeatingModeComparisons(breakdowns: HeatingCostBreakdown[], formState: FormState, selectedAddress: AddressSuggestion) {
+  const engine = new Engine<RuleName>(publicodesRules, PUBLICODES_ENGINE_OPTIONS);
 
-  return [
-    {
-      help: `Revenu fiscal de référence inférieur ou égal à ${formatCurrency(veryLowThreshold)}.`,
-      label: INCOME_LABELS.very_low,
-      value: 'very_low',
-    },
-    {
-      help: `De ${formatCurrency(veryLowThreshold + 1)} à ${formatCurrency(lowThreshold)}.`,
-      label: INCOME_LABELS.low,
-      value: 'low',
-    },
-    {
-      help: `De ${formatCurrency(lowThreshold + 1)} à ${formatCurrency(middleThreshold)}.`,
-      label: INCOME_LABELS.middle,
-      value: 'middle',
-    },
-    {
-      help: `Supérieur à ${formatCurrency(middleThreshold)}.`,
-      label: INCOME_LABELS.high,
-      value: 'high',
-    },
-  ] satisfies { help: string; label: string; value: IncomeCategory }[];
+  engine.setSituation({
+    'code département': `'${selectedAddress.departmentCode}'`,
+    DPE: `'${formState.dpe}'`,
+    'Inclure la climatisation': 'non',
+    'méthode résidentiel': "'DPE'",
+    "Nombre d'habitants moyen par appartement": Number(formState.occupants),
+    "nombre de logements dans l'immeuble concerné": 1,
+    "Paramètres économiques . Aides . Éligibilité x Je dispose actuellement d'une chaudière gaz ou fioul": 'oui',
+    'Paramètres économiques . Aides . Éligibilité x Je suis un particulier': 'oui',
+    'Paramètres économiques . Aides . Éligibilité x Prise en compte des aides': 'oui',
+    'Paramètres économiques . Aides . Éligibilité x Ressources du ménage': `'${formState.incomeCategory}'`,
+    'Production eau chaude sanitaire': 'oui',
+    'ratios . GNRL Appartement ou maison': "'Maison'",
+    'surface logement type tertiaire': Number(formState.surface),
+    'température de référence chaud commune': DEFAULT_TEMPERATURE_REFERENCE,
+    'type de bâtiment': "'résidentiel'",
+    'type de production ECS': "'Avec équipement chauffage'",
+  });
+
+  return HEATING_MODE_RULES.map((heatingMode) => {
+    const breakdown = breakdowns.find((heatingCostBreakdown) => heatingCostBreakdown.label === heatingMode.label);
+
+    return {
+      co2: roundNumber(getRuleValue(engine, heatingMode.co2RuleName)),
+      label: heatingMode.label,
+      p1: breakdown?.p1 ?? 0,
+    };
+  });
 }
 
-function getIncomeThreshold(zone: 'ileDeFrance' | 'other', occupants: number, category: Exclude<IncomeCategory, 'high'>) {
-  const normalizedOccupants = Math.max(1, Math.floor(occupants));
-  const baseThresholds = INCOME_THRESHOLDS[zone][category];
+function getRuleValue(engine: Engine<RuleName>, ruleName: RuleName) {
+  return Number(engine.evaluate(ruleName).nodeValue ?? 0);
+}
 
-  return normalizedOccupants <= baseThresholds.length
-    ? baseThresholds[normalizedOccupants - 1]
-    : baseThresholds.at(-1)! + (normalizedOccupants - baseThresholds.length) * ADDITIONAL_PERSON_THRESHOLDS[zone][category];
+function roundNumber(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
 function formatCurrency(value: number) {
@@ -430,6 +546,12 @@ function formatCurrency(value: number) {
     currency: 'EUR',
     maximumFractionDigits: 0,
     style: 'currency',
+  }).format(value);
+}
+
+function formatCo2(value: number) {
+  return new Intl.NumberFormat('fr-FR', {
+    maximumFractionDigits: 0,
   }).format(value);
 }
 
