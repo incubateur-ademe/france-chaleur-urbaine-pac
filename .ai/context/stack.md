@@ -10,7 +10,9 @@ Versions live in `package.json` and are authoritative.
 
 ## UI
 
-- `@codegouvfr/react-dsfr` for DSFR components and styles.
+- DSFR is provided by the host page in production; do not add `@codegouvfr/react-dsfr` or bundle DSFR in the app.
+- `vite.config.ts` injects DSFR 1.13.1 CSS and JS only during `pnpm dev`; production builds exclude those tags.
+- Use native DSFR HTML structure and `fr-*` classes in React components.
 - Plain CSS is enough for the initial shell; add Tailwind only if a real need appears.
 
 ## Publicodes
