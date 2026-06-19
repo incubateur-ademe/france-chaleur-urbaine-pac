@@ -8,7 +8,10 @@ This repository is a small frontend prototype. It has no server runtime, databas
 
 | Area | Location | Purpose |
 |------|----------|---------|
-| App shell | `src/App.tsx` | Root React UI and high-level composition |
+| App shell | `src/App.tsx` | Journey state, API calls, URL synchronization and high-level composition |
+| Questionnaire | `src/Questionnaire.tsx` | Steps 1 to 8 and their form controls |
+| Results page | `src/ResultsPage.tsx` | Recommendations and simulation result presentation |
+| Shared contracts | `src/types.ts` | Domain values and types shared across the journey components |
 | Entry point | `src/main.tsx` | DSFR startup, CSS imports, React mounting |
 | Tests | `src/**/*.spec.tsx` | Component and utility tests |
 | Test setup | `src/test/setup.ts` | Testing Library / Vitest setup |
