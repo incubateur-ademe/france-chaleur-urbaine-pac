@@ -18,8 +18,11 @@
   },
   "homepage": "https://github.com/incubateur-ademe/france-chaleur-urbaine-pac#readme",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "pnpm ts && vite build",
+    "dev": "vite --host 127.0.0.1 --mode dev",
+    "build": "pnpm build:prod",
+    "build:demo": "pnpm ts && vite build --mode demo",
+    "build:dev": "pnpm ts && vite build --mode dev",
+    "build:prod": "pnpm ts && vite build --mode prod",
     "preview": "vite preview --host 127.0.0.1",
     "prepare": "husky",
     "lint": "biome check --max-diagnostics 50 .",
