@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Questionnaire } from './Questionnaire';
 import { ResultsPage } from './ResultsPage';
 import {
-  type AddressSuggestion,
   DPE_VALUES,
   type Dpe,
   type DpeInput,
@@ -16,6 +15,7 @@ import {
   INCOME_CATEGORY_VALUES,
   type IncomeCategory,
   type IncomeOption,
+  type LocationSuggestion,
   OWNER_STATUS_VALUES,
   type QuestionnaireChoice,
   type RouteOutcome,
@@ -27,7 +27,7 @@ const DEFAULT_TEMPERATURE_REFERENCE = -7;
 const INTRO_STEP = 0;
 const RESULT_STEP = 9;
 
-type BanFeature = {
+type BanMunicipalityFeature = {
   geometry: {
     coordinates: [number, number];
   };
@@ -52,14 +52,14 @@ type ApiSimulationResult = Omit<SimulationResult, 'heatingModeComparisons'> & {
 };
 
 const INITIAL_FORM_STATE = {
-  address: '',
   dpe: null,
   heatingEquipment: null,
   housingType: null,
   incomeCategory: null,
+  location: '',
   occupants: '2',
   ownerStatus: null,
-  selectedAddress: null,
+  selectedLocation: null,
   surface: '90',
 } satisfies FormState;
 
@@ -81,13 +81,49 @@ const HEATING_MODE_RULES = [
   label: string;
 }[];
 
+const HOME_FEATURES = [
+  {
+    description: (
+      <>
+        Ce simulateur estime la facture d'énergie et émissions de CO₂ si vous passez d'une chaudière gaz ou fioul à une PAC air/eau
+        (chauffage et eau chaude) en maison individuelle.
+      </>
+    ),
+    iconClassName: 'fr-icon-home-4-fill fr-icon--lg',
+    title: 'Maison individuelle',
+  },
+  {
+    description: (
+      <>
+        <strong>Les informations présentées sont des estimations</strong> et peuvent varier selon votre logement et vos équipements.
+      </>
+    ),
+    iconClassName: 'fr-icon-bar-chart-box-fill fr-icon--lg',
+    title: 'Estimation',
+  },
+  {
+    description: (
+      <>
+        Les aides estimées impliquent le <strong>remplacement de votre chaudière gaz ou fioul</strong>.
+      </>
+    ),
+    iconClassName: 'fr-icon-money-euro-box-fill fr-icon--lg',
+    title: 'Aides incluses',
+  },
+  {
+    description: <>Les calculs sont simplifiés et ne remplacent pas un devis par un professionnel RGE.</>,
+    iconClassName: 'fr-icon-file-text-fill fr-icon--lg',
+    title: 'Calculs simplifiés',
+  },
+] as const;
+
 export function App() {
   const initialState = useMemo(() => getInitialJourneyState(), []);
   const [currentStep, setCurrentStep] = useState(initialState.currentStep);
   const [formState, setFormState] = useState<FormState>(initialState.formState);
-  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [incomeOptions, setIncomeOptions] = useState<IncomeOption[]>([]);
-  const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [isIncomeOptionsLoading, setIsIncomeOptionsLoading] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -103,44 +139,44 @@ export function App() {
 
   useEffect(() => {
     setErrorMessage(null);
-    if (formState.address.length < 3 || formState.selectedAddress?.label === formState.address) {
-      setAddressSuggestions([]);
-      setIsAddressLoading(false);
+    if (formState.location.length < 3 || formState.selectedLocation?.label === formState.location) {
+      setLocationSuggestions([]);
+      setIsLocationLoading(false);
       return;
     }
 
     const abortController = new AbortController();
-    setIsAddressLoading(true);
+    setIsLocationLoading(true);
 
-    fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(formState.address)}&limit=5`, {
+    fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(formState.location)}&type=municipality&autocomplete=1&limit=5`, {
       signal: abortController.signal,
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Address search failed');
+          throw new Error('Location search failed');
         }
-        return response.json() as Promise<{ features: BanFeature[] }>;
+        return response.json() as Promise<{ features: BanMunicipalityFeature[] }>;
       })
       .then((data) => {
-        setAddressSuggestions(data.features.map(toAddressSuggestion));
+        setLocationSuggestions(data.features.map(toLocationSuggestion));
       })
       .catch((error) => {
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
-        setErrorMessage('La recherche d’adresse est momentanément indisponible.');
+        setErrorMessage('La recherche de commune est momentanément indisponible.');
       })
       .finally(() => {
         if (!abortController.signal.aborted) {
-          setIsAddressLoading(false);
+          setIsLocationLoading(false);
         }
       });
 
     return () => abortController.abort();
-  }, [formState.address, formState.selectedAddress]);
+  }, [formState.location, formState.selectedLocation]);
 
   useEffect(() => {
-    if (!formState.selectedAddress || !Number.isFinite(occupants) || occupants < 1) {
+    if (!formState.selectedLocation || !Number.isFinite(occupants) || occupants < 1) {
       setIncomeOptions([]);
       setIsIncomeOptionsLoading(false);
       return;
@@ -152,7 +188,7 @@ export function App() {
 
     fetch(`${DEFAULT_API_BASE_URL}/api/pac/income-options`, {
       body: JSON.stringify({
-        departmentCode: formState.selectedAddress.departmentCode,
+        departmentCode: formState.selectedLocation.departmentCode,
         occupants: Math.floor(occupants),
       }),
       headers: {
@@ -184,7 +220,7 @@ export function App() {
       });
 
     return () => abortController.abort();
-  }, [formState.selectedAddress, occupants]);
+  }, [formState.selectedLocation, occupants]);
 
   useEffect(() => {
     if (currentStep !== RESULT_STEP || routeOutcome !== 'continue' || result || errorMessage || isSubmitting) {
@@ -201,13 +237,13 @@ export function App() {
   };
 
   const handleQuestionnaireChoice = (choice: QuestionnaireChoice) => {
-    if (choice.field === 'ownerStatus') {
-      handleChoiceChange({ ownerStatus: choice.value }, choice.value === 'tenant' ? RESULT_STEP : 2);
+    if (choice.field === 'housingType') {
+      handleChoiceChange({ housingType: choice.value }, choice.value === 'apartment' ? RESULT_STEP : 2);
       return;
     }
 
-    if (choice.field === 'housingType') {
-      handleChoiceChange({ housingType: choice.value }, choice.value === 'apartment' ? RESULT_STEP : 3);
+    if (choice.field === 'ownerStatus') {
+      handleChoiceChange({ ownerStatus: choice.value }, choice.value === 'tenant' ? RESULT_STEP : 3);
       return;
     }
 
@@ -223,13 +259,13 @@ export function App() {
     setFormState((previousState) => ({ ...previousState, ...changes }));
   };
 
-  const handleAddressChange = (address: string) => {
-    handleFormChange({ address, selectedAddress: null });
+  const handleLocationChange = (location: string) => {
+    handleFormChange({ location, selectedLocation: null });
   };
 
-  const handleAddressSelect = (selectedAddress: AddressSuggestion) => {
-    handleFormChange({ address: selectedAddress.label, selectedAddress });
-    setAddressSuggestions([]);
+  const handleLocationSelect = (selectedLocation: LocationSuggestion) => {
+    handleFormChange({ location: selectedLocation.label, selectedLocation });
+    setLocationSuggestions([]);
   };
 
   const handleStep = (action: 'previous' | 'next') => {
@@ -238,21 +274,37 @@ export function App() {
     setCurrentStep(action === 'previous' ? getPreviousStep(currentStep, formState) : Math.min(currentStep + 1, RESULT_STEP));
   };
 
+  const handleEditStep = (step: number) => {
+    setResult(null);
+    setErrorMessage(null);
+    setCurrentStep(step);
+  };
+
   const handleRestart = () => {
     setCurrentStep(1);
     setFormState(INITIAL_FORM_STATE);
-    setAddressSuggestions([]);
+    setLocationSuggestions([]);
     setIncomeOptions([]);
     setResult(null);
     setErrorMessage(null);
   };
 
+  const handleBack = () => {
+    window.history.back();
+  };
+
   return (
-    <main className="fr-container fr-background-default--grey ">
-      <div className="fr-p-4w">
-        <h1 className="fr-h2" id="home-title">
-          Évaluez les gains économiques et écologiques de l’installation d’une PAC en remplacement de votre chaudière
-        </h1>
+    <main className="fr-background-default--grey">
+      <div className="fr-container fr-py-4w">
+        <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
+          Retour
+        </button>
+        <div>
+          <h1>
+            Pompe à chaleur air/eau :<br /> Combien ça coûte, combien j’économise ?
+          </h1>
+          <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies. Cela prend moins de 2 minutes.</p>
+        </div>
         {currentStep === INTRO_STEP && <HomeScreen onStart={() => setCurrentStep(1)} />}
         {currentStep === RESULT_STEP && (
           <ResultsPage
@@ -267,18 +319,19 @@ export function App() {
         )}
         {currentStep > INTRO_STEP && currentStep < RESULT_STEP && (
           <Questionnaire
-            addressSuggestions={addressSuggestions}
             currentStep={currentStep}
             errorMessage={errorMessage}
             formState={formState}
             incomeOptions={incomeOptions}
-            isAddressLoading={isAddressLoading}
             isIncomeOptionsLoading={isIncomeOptionsLoading}
-            onAddressChange={handleAddressChange}
-            onAddressSelect={handleAddressSelect}
+            isLocationLoading={isLocationLoading}
+            locationSuggestions={locationSuggestions}
             onFormChange={handleFormChange}
             onChoiceSelect={handleQuestionnaireChoice}
+            onEditStep={handleEditStep}
             onHandleStep={handleStep}
+            onLocationChange={handleLocationChange}
+            onLocationSelect={handleLocationSelect}
           />
         )}
       </div>
@@ -288,48 +341,49 @@ export function App() {
 
 function HomeScreen({ onStart }: { onStart: () => void }) {
   return (
-    <section>
-      <div className="fr-alert fr-alert--info">
-        <h2 className="fr-alert__title">Précautions</h2>
-        <p>
-          <strong>Ce simulateur est dédié à la maison individuelle</strong> et propose une simulation de la facture d’énergie et des
-          émissions de CO₂ liées au chauffage et à l’eau chaude sanitaire pour des foyers qui souhaiteraient passer d’une chaudière gaz ou
-          fioul à une pompe à chaleur air/eau.
-        </p>
-        <p>
-          <strong>
-            Les informations présentées sont des estimations et peuvent varier en fonction des caractéristiques des logements et des
-            équipements.
-          </strong>
-        </p>
-        <p>Les aides prises en compte dans les calculs impliquent le remplacement de la chaudière gaz ou fioul.</p>
-        <p>
-          Les calculs sont simplifiés. Vous pouvez accéder à un simulateur plus détaillé sur France Chaleur Urbaine. Pour concrétiser votre
-          projet, faites réaliser plusieurs devis et prenez conseil auprès du conseiller ENR de votre territoire.
-        </p>
+    <section aria-labelledby="home-title">
+      <p className="fr-badge fr-badge--info fr-badge--no-icon fr-py-1v">
+        <span className="fr-icon-time-fill fr-mr-1v" aria-hidden="true" />
+        Moins d’une minute
+      </p>
+      <div className="home-feature-grid">
+        {HOME_FEATURES.map((feature) => (
+          <article className="home-feature" key={feature.title}>
+            <span className={feature.iconClassName} aria-hidden="true" />
+            <div className="fr-ml-2v">
+              <h2 className="fr-h4">{feature.title}</h2>
+              <p className="fr-mb-0">{feature.description}</p>
+            </div>
+          </article>
+        ))}
       </div>
-      <div className="fr-grid-row fr-grid-row--center fr-mt-6v">
-        <button className="fr-btn" type="button" onClick={onStart}>
-          Démarrer ma simulation
-        </button>
-      </div>
+      <button className="fr-my-6v fr-btn fr-btn--icon-right fr-icon-arrow-right-line" type="button" onClick={onStart}>
+        Démarrer la simulation
+      </button>
+      <p className="fr-mt-3v">
+        Vous pouvez accéder à un simulateur plus détaillé sur{' '}
+        <a href="https://france-chaleur-urbaine.beta.gouv.fr/" target="_blank" rel="noreferrer">
+          France Chaleur Urbaine
+        </a>
+        .
+      </p>
     </section>
   );
 }
 
 function getInitialJourneyState() {
   const searchParams = new URLSearchParams(window.location.search);
-  const selectedAddress = getInitialSelectedAddress(searchParams);
+  const selectedLocation = getInitialSelectedLocation(searchParams);
   const formState = {
     ...INITIAL_FORM_STATE,
-    address: searchParams.get('address') ?? INITIAL_FORM_STATE.address,
     dpe: getSearchParamValue(searchParams, 'dpe', DPE_VALUES),
     heatingEquipment: getSearchParamValue(searchParams, 'equipment', HEATING_EQUIPMENT_VALUES),
     housingType: getSearchParamValue(searchParams, 'housing', HOUSING_TYPE_VALUES),
     incomeCategory: getSearchParamValue(searchParams, 'incomeCategory', INCOME_CATEGORY_VALUES),
+    location: searchParams.get('location') ?? searchParams.get('address') ?? INITIAL_FORM_STATE.location,
     occupants: searchParams.get('occupants') ?? INITIAL_FORM_STATE.occupants,
     ownerStatus: getSearchParamValue(searchParams, 'situation', OWNER_STATUS_VALUES),
-    selectedAddress,
+    selectedLocation,
     surface: searchParams.get('surface') ?? INITIAL_FORM_STATE.surface,
   } satisfies FormState;
 
@@ -339,8 +393,8 @@ function getInitialJourneyState() {
   };
 }
 
-function getInitialSelectedAddress(searchParams: URLSearchParams) {
-  const label = searchParams.get('address');
+function getInitialSelectedLocation(searchParams: URLSearchParams) {
+  const label = searchParams.get('location') ?? searchParams.get('address');
   const departmentCode = searchParams.get('departmentCode');
   const postcode = searchParams.get('postcode');
 
@@ -353,7 +407,7 @@ function getInitialSelectedAddress(searchParams: URLSearchParams) {
     departmentCode,
     label,
     postcode,
-  } satisfies AddressSuggestion;
+  } satisfies LocationSuggestion;
 }
 
 function getInitialStep(searchParams: URLSearchParams, formState: FormState) {
@@ -378,11 +432,11 @@ function getLastAvailableStep(formState: FormState) {
     return RESULT_STEP;
   }
 
-  if (!formState.ownerStatus) {
+  if (!formState.housingType) {
     return 1;
   }
 
-  if (!formState.housingType) {
+  if (!formState.ownerStatus) {
     return 2;
   }
 
@@ -390,7 +444,7 @@ function getLastAvailableStep(formState: FormState) {
     return 3;
   }
 
-  if (!formState.selectedAddress) {
+  if (!formState.selectedLocation) {
     return 4;
   }
 
@@ -417,16 +471,16 @@ function getSearchParams(formState: FormState, currentStep: number) {
   setOptionalSearchParam(searchParams, 'situation', formState.ownerStatus);
   setOptionalSearchParam(searchParams, 'housing', formState.housingType);
   setOptionalSearchParam(searchParams, 'equipment', formState.heatingEquipment);
-  setOptionalSearchParam(searchParams, 'address', formState.address);
+  setOptionalSearchParam(searchParams, 'location', formState.location);
   setOptionalSearchParam(searchParams, 'dpe', formState.dpe);
   setChangedSearchParam(searchParams, 'occupants', formState.occupants, INITIAL_FORM_STATE.occupants);
   setChangedSearchParam(searchParams, 'surface', formState.surface, INITIAL_FORM_STATE.surface);
   setOptionalSearchParam(searchParams, 'incomeCategory', formState.incomeCategory);
 
-  if (formState.selectedAddress) {
-    searchParams.set('city', formState.selectedAddress.city);
-    searchParams.set('departmentCode', formState.selectedAddress.departmentCode);
-    searchParams.set('postcode', formState.selectedAddress.postcode);
+  if (formState.selectedLocation) {
+    searchParams.set('city', formState.selectedLocation.city);
+    searchParams.set('departmentCode', formState.selectedLocation.departmentCode);
+    searchParams.set('postcode', formState.selectedLocation.postcode);
   }
 
   return searchParams;
@@ -480,11 +534,11 @@ function getPreviousStep(currentStep: number, formState: FormState) {
   const routeOutcome = getRouteOutcome(formState);
 
   if (currentStep === RESULT_STEP && routeOutcome === 'tenant') {
-    return 1;
+    return 2;
   }
 
   if (currentStep === RESULT_STEP && routeOutcome === 'apartment') {
-    return 2;
+    return 1;
   }
 
   if (currentStep === RESULT_STEP && routeOutcome === 'electric-radiator') {
@@ -508,13 +562,13 @@ async function runSimulation(
     return;
   }
 
-  const selectedAddress = formState.selectedAddress;
+  const selectedLocation = formState.selectedLocation;
   setIsSubmitting(true);
 
   try {
     const response = await fetch(`${DEFAULT_API_BASE_URL}/api/pac/simulation`, {
       body: JSON.stringify({
-        departmentCode: selectedAddress.departmentCode,
+        departmentCode: selectedLocation.departmentCode,
         dpe: getSimulationDpe(formState.dpe),
         incomeCategory: formState.incomeCategory,
         occupants: Number(formState.occupants),
@@ -534,7 +588,7 @@ async function runSimulation(
 
     setResult({
       ...apiResult,
-      heatingModeComparisons: getHeatingModeComparisons(apiResult.heatingCostBreakdowns, formState, selectedAddress),
+      heatingModeComparisons: getHeatingModeComparisons(apiResult.heatingCostBreakdowns, formState, selectedLocation),
     });
   } catch {
     setErrorMessage('Le calcul est momentanément indisponible.');
@@ -543,11 +597,13 @@ async function runSimulation(
   }
 }
 
-function toAddressSuggestion(feature: BanFeature): AddressSuggestion {
+function toLocationSuggestion(feature: BanMunicipalityFeature): LocationSuggestion {
+  const departmentCode = feature.properties.context.split(',')[0] ?? feature.properties.postcode.slice(0, 2);
+
   return {
     city: feature.properties.city,
-    departmentCode: feature.properties.context.split(',')[0] ?? feature.properties.postcode.slice(0, 2),
-    label: feature.properties.label,
+    departmentCode,
+    label: `${feature.properties.postcode} ${feature.properties.city}`,
     postcode: feature.properties.postcode,
   };
 }
@@ -555,14 +611,18 @@ function toAddressSuggestion(feature: BanFeature): AddressSuggestion {
 type SimulationFormState = FormState & {
   dpe: DpeInput;
   incomeCategory: IncomeCategory;
-  selectedAddress: AddressSuggestion;
+  selectedLocation: LocationSuggestion;
 };
 
 function isSimulationReady(formState: FormState): formState is SimulationFormState {
-  return formState.selectedAddress !== null && formState.dpe !== null && formState.incomeCategory !== null;
+  return formState.selectedLocation !== null && formState.dpe !== null && formState.incomeCategory !== null;
 }
 
-function getHeatingModeComparisons(breakdowns: HeatingCostBreakdown[], formState: SimulationFormState, selectedAddress: AddressSuggestion) {
+function getHeatingModeComparisons(
+  breakdowns: HeatingCostBreakdown[],
+  formState: SimulationFormState,
+  selectedLocation: LocationSuggestion
+) {
   const engine = new Engine<RuleName>(publicodesRules, {
     logger: {
       error: () => undefined,
@@ -572,7 +632,7 @@ function getHeatingModeComparisons(breakdowns: HeatingCostBreakdown[], formState
   });
 
   engine.setSituation({
-    'code département': `'${selectedAddress.departmentCode}'`,
+    'code département': `'${selectedLocation.departmentCode}'`,
     DPE: `'${getSimulationDpe(formState.dpe)}'`,
     'Inclure la climatisation': 'non',
     'méthode résidentiel': "'DPE'",

@@ -1,67 +1,73 @@
-body {
-  margin: 0;
+.home-back-button {
+  justify-self: start;
 }
 
-.home-panel {
+.home-feature-grid {
   display: grid;
-  max-width: 50rem;
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--border-default-grey);
+  margin-top: 3rem;
 }
 
-.home-panel h1 {
-  max-width: 48rem;
-  margin: 0;
-  color: var(--text-title-grey);
-  font-size: 1.75rem;
-  line-height: 1.18;
-}
-
-.precaution-panel {
+.home-feature {
   display: grid;
-  grid-template-columns: 2rem 1fr;
-  border: 1px solid var(--border-action-high-blue-france);
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  min-height: 8rem;
+  padding: 1.25rem;
+  border-right: 1px solid var(--border-default-grey);
+  border-bottom: 1px solid var(--border-default-grey);
   background: var(--background-default-grey);
 }
 
-.precaution-icon {
-  display: flex;
-  justify-content: center;
-  padding-top: 0.875rem;
-  background: var(--background-action-high-blue-france);
-  color: var(--text-inverted-blue-france);
-  font-weight: 700;
+.home-feature:nth-child(2n) {
+  border-right: 0;
 }
 
-.precaution-content {
-  position: relative;
-  padding: 1rem 2.75rem 0.75rem 1rem;
+.home-feature:nth-last-child(-n + 2) {
+  border-bottom: 0;
 }
 
-.precaution-close {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.75rem;
-  color: var(--text-action-high-blue-france);
-  font-size: 1.25rem;
-  line-height: 1;
+.question-card {
+  border: 1px solid var(--border-default-grey);
+  background: var(--background-default-grey);
 }
 
-.precaution-content h2 {
-  margin: 0 0 0.5rem;
+.question-card-completed {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  min-height: 4.5rem;
+  padding: 1rem;
+}
+
+.question-card-check {
+  color: var(--text-default-success);
+}
+
+.question-card legend {
+  font-weight: bold;
+}
+
+.question-summary-label {
+  margin: 0;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.question-summary-value {
+  margin: 0.125rem 0 0;
   color: var(--text-title-grey);
-  font-size: 1.25rem;
-  line-height: 1.3;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
-.precaution-content p {
-  margin: 0 0 1rem;
-  color: var(--text-default-grey);
-  font-size: 1rem;
-  line-height: 1.55;
-}
-
-.home-start-button {
-  justify-self: start;
+.question-edit-button {
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
 }
 
 .journey-panel {
@@ -73,8 +79,12 @@ body {
 
 .step-content {
   display: grid;
-  gap: 2rem;
-  margin-top: 2rem;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.step-content .fr-label {
+  font-weight: bold;
 }
 
 .choice-fieldset {
@@ -83,8 +93,8 @@ body {
 
 .choice-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
 }
 
 .choice-options-three {
@@ -96,13 +106,13 @@ body {
 }
 
 .choice-options .fr-label {
-  min-height: 5rem;
+  min-height: 2.75rem;
   align-content: center;
-  font-size: 1.125rem;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
-.address-suggestions {
+.location-suggestions {
   margin: 0.5rem 0 0;
   padding: 0;
   list-style: none;
@@ -110,7 +120,7 @@ body {
   background: var(--background-default-grey);
 }
 
-.address-suggestions .fr-btn {
+.location-suggestions .fr-btn {
   justify-content: flex-start;
   width: 100%;
   min-height: auto;
@@ -193,7 +203,8 @@ body {
 .step-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  margin-top: 1.5rem;
+  gap: 0.75rem;
   justify-content: flex-start;
 }
 
@@ -385,16 +396,27 @@ body {
 }
 
 @media (max-width: 48em) {
-  .home-panel h1 {
+  .home-heading h1 {
     font-size: 1.5rem;
   }
 
-  .precaution-panel {
-    grid-template-columns: 1.75rem 1fr;
+  .simulator-heading h1 {
+    font-size: 1.375rem;
   }
 
-  .precaution-content {
-    padding-right: 2rem;
+  .home-feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-feature,
+  .home-feature:nth-child(2n),
+  .home-feature:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-default-grey);
+  }
+
+  .home-feature:last-child {
+    border-bottom: 0;
   }
 
   .journey-panel {
@@ -403,6 +425,15 @@ body {
 
   .choice-options {
     grid-template-columns: 1fr;
+  }
+
+  .question-card-completed {
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+  }
+
+  .question-edit-button {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .step-actions {

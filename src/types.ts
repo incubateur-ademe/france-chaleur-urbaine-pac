@@ -18,7 +18,7 @@ export type QuestionnaireChoice =
   | { field: 'housingType'; value: HousingType }
   | { field: 'ownerStatus'; value: OwnerStatus };
 
-export type AddressSuggestion = {
+export type LocationSuggestion = {
   city: string;
   departmentCode: string;
   label: string;
@@ -50,13 +50,13 @@ export type IncomeOption = {
 };
 
 export type FormState = {
-  address: string;
   dpe: DpeInput | null;
   heatingEquipment: HeatingEquipment | null;
   housingType: HousingType | null;
   incomeCategory: IncomeCategory | null;
+  location: string;
   occupants: string;
   ownerStatus: OwnerStatus | null;
-  selectedAddress: AddressSuggestion | null;
+  selectedLocation: LocationSuggestion | null;
   surface: string;
 };
