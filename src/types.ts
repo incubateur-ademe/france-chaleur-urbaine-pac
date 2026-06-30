@@ -44,7 +44,7 @@ export type SimulationResult = {
 };
 
 export type IncomeOption = {
-  help: string;
+  help?: string;
   label: string;
   value: IncomeCategory;
 };

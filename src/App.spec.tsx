@@ -3,10 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { App } from './App';
 
-vi.mock('@betagouv/france-chaleur-urbaine-publicodes', () => ({
-  default: {},
-}));
-
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -72,7 +68,7 @@ describe('App', () => {
     window.history.replaceState(
       null,
       '',
-      '/?step=6&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&departmentCode=64&postcode=64200&dpe=D'
+      '/?step=6&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&postcode=64200&dpe=D'
     );
     vi.stubGlobal(
       'fetch',
@@ -87,8 +83,8 @@ describe('App', () => {
     render(<App />);
 
     expect(screen.getByText('Surface chauffée - QUESTION 6/8')).toBeInTheDocument();
-    expect(screen.getByLabelText('Quelle est la surface chauffée ?')).toBeInTheDocument();
-    expect(screen.getByText(/Étape suivante :/).parentElement).toHaveTextContent('Nombre d’habitants');
+    expect(screen.getByLabelText('Quelle est la surface chauffée du logement ?')).toBeInTheDocument();
+    expect(screen.getByText(/Étape suivante :/).parentElement).toHaveTextContent('Composition du foyer');
   });
 
   it('hides following answers when editing a previous step', () => {
@@ -143,7 +139,7 @@ describe('App', () => {
     const searchParams = new URLSearchParams(window.location.search);
 
     expect(searchParams.get('postcode')).toBe('64200');
-    expect(searchParams.get('departmentCode')).toBe('64');
+    expect(searchParams.get('departmentCode')).toBeNull();
     expect(screen.getByText('Commune sélectionnée : 64200 Biarritz')).toBeInTheDocument();
   });
 });
