@@ -100,6 +100,7 @@ type ChoiceStepConfig<TValue extends string> = {
   name: string;
   options: readonly {
     badgeClassName?: string;
+    fieldsetElementClassName?: string;
     help?: string;
     label: string;
     value: TValue;
@@ -156,7 +157,8 @@ const DPE_STEP_CONFIG = {
   name: 'dpe',
   options: DPE_VALUES.map((dpeValue) => ({
     badgeClassName: dpeValue === 'unknown' ? undefined : `dpe-badge-${dpeValue.toLowerCase()}`,
-    label: dpeValue === 'unknown' ? 'Je ne sais pas (une étiquette D sera enregistré)' : dpeValue,
+    fieldsetElementClassName: dpeValue === 'unknown' ? 'dpe-unknown-fieldset-element' : undefined,
+    label: dpeValue === 'unknown' ? 'Je ne sais pas (une étiquette D sera enregistrée)' : dpeValue,
     value: dpeValue,
   })),
 } satisfies ChoiceStepConfig<DpeInput>;
@@ -507,7 +509,10 @@ function ChoiceStep<TValue extends string>({ legend, hint, name, options, select
       </legend>
 
       {options.map((option) => (
-        <div className="fr-fieldset__element fr-fieldset__element--inline" key={option.value}>
+        <div
+          className={`fr-fieldset__element fr-fieldset__element--inline${option.fieldsetElementClassName ? ` ${option.fieldsetElementClassName}` : ''}`}
+          key={option.value}
+        >
           <div className="fr-radio-group fr-radio-rich">
             <input
               checked={selectedValue === option.value}

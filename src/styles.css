@@ -83,6 +83,10 @@
   min-width: 0;
 }
 
+.question-card .dpe-unknown-fieldset-element {
+  flex: 0 0 100%;
+}
+
 .question-card .fr-radio-rich,
 .question-card .fr-radio-rich .fr-label {
   width: 100%;
