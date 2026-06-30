@@ -3,7 +3,6 @@
   <path d="M8 50 63 9l55 41" fill="none" stroke="#31517f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
   <path d="M34 50c11-18 38-20 55-3 11 11 12 29 0 40-16 15-45 13-57-4-7-10-7-22 2-33Z" fill="#20366f" />
   <path d="M49 64c11-12 29-13 43-3" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" />
-  <path d="M73 48c3 2 5 4 6 8" fill="none" stroke="#ffdf5d" stroke-width="4" stroke-linecap="round" />
   <g font-family="Marianne, Arial, sans-serif" font-weight="800">
     <text x="122" y="55" fill="#20366f" font-size="36">France</text>
     <text x="122" y="91" fill="#e43d30" font-size="36">Rénov’</text>

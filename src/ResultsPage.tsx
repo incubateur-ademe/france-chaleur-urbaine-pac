@@ -1,3 +1,4 @@
+import { HOME_FEATURES } from '@/App';
 import { Stepper } from '@/Questionnaire';
 
 import type { HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
@@ -430,7 +431,7 @@ function FifteenYearComparison({
       <div className="fr-callout fr-callout--green-emeraude" style={{ backgroundColor: '#F8FAFF' }}>
         <p>
           À budget comparable, <b>la pompe à chaleur revient moins cher</b> dès la première année. Au bout de 15 ans, vous auriez dépensé
-          environ <strong className="fr-text-default--success">{formatCurrency(fifteenYearSavings)} de moins</strong> qu’avec une nouvelle
+          environ <strong className="fr-text-default--success">{formatCurrency(annualSavings)} de moins</strong> qu’avec une nouvelle
           chaudière.
         </p>
       </div>
@@ -438,53 +439,23 @@ function FifteenYearComparison({
   );
 }
 
-/**
- * Lists the limits of the result to keep the estimate decision-safe.
- */
 function MethodNotes() {
-  const notes = [
-    {
-      description: 'Les informations présentées sont des estimations et peuvent varier selon votre logement.',
-      iconClassName: 'fr-icon-bar-chart-2-fill',
-      title: 'Estimation',
-    },
-    {
-      description: 'Les aides estimées dans les calculs impliquent le remplacement de la chaudière gaz ou fioul.',
-      iconClassName: 'fr-icon-money-euro-box-fill',
-      title: 'Aides incluses',
-    },
-    {
-      description: 'Les calculs sont simplifiés et ne remplacent pas un devis par un professionnel RGE.',
-      iconClassName: 'fr-icon-calculator-fill',
-      title: 'Calculs simplifiés',
-    },
-    {
-      description: 'Faites accompagner votre projet par un professionnel pour réussir vos travaux.',
-      iconClassName: 'fr-icon-chat-3-fill',
-      title: 'Faites-vous accompagner',
-    },
-  ] satisfies MethodNote[];
-
   return (
-    <section className="method-notes" aria-label="Précisions sur les calculs">
-      {notes.map((note) => (
-        <article className="method-note" key={note.title}>
-          <span className={note.iconClassName} aria-hidden="true" />
-          <div>
-            <h3>{note.title}</h3>
-            <p>{note.description}</p>
+    <div className="fr-grid-row fr-mt-5v">
+      {HOME_FEATURES.map((feature) => (
+        <article className="fr-col-12 fr-col-lg-6 fr-p-3w fr-grid-row home-feature" key={feature.title}>
+          <div className="fr-col-auto">
+            <span className={`${feature.iconClassName} fr-icon--lg`} aria-hidden="true" />
+          </div>
+          <div className="fr-col fr-pl-3v">
+            <h2 className="fr-h4">{feature.title}</h2>
+            <p className="fr-mb-0">{feature.description}</p>
           </div>
         </article>
       ))}
-    </section>
+    </div>
   );
 }
-
-type MethodNote = {
-  description: string;
-  iconClassName: string;
-  title: string;
-};
 
 function SectionHeading({ iconClassName, title }: { iconClassName: string; title: string }) {
   return (

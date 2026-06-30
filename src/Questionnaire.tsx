@@ -376,7 +376,7 @@ function renderActiveStep({
     <>
       {isIncomeOptionsLoading && <p className="fr-hint-text">Chargement des plafonds de revenus…</p>}
       <ChoiceStep
-        legend="Dans qulle tranche se situent les revenus du foyer ?"
+        legend="Dans quelle tranche se situent les revenus du foyer ?"
         hint="Il s'agit ici de la somme des revenus de votre foyer, vous pouvez le vérifier sur votre dernier avis d'imposition (revenu fiscal de référence)."
         name="incomeCategory"
         options={displayedIncomeOptions}
@@ -510,7 +510,7 @@ function ChoiceStep<TValue extends string>({ legend, hint, name, options, select
 
       {options.map((option) => (
         <div
-          className={`fr-fieldset__element fr-fieldset__element--inline${option.fieldsetElementClassName ? ` ${option.fieldsetElementClassName}` : ''}`}
+          className={`fr-mb-0 fr-fieldset__element fr-fieldset__element--inline${option.fieldsetElementClassName ? ` ${option.fieldsetElementClassName}` : ''}`}
           key={option.value}
         >
           <div className="fr-radio-group fr-radio-rich">

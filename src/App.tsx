@@ -15,7 +15,7 @@ import { Questionnaire } from './Questionnaire';
 import { ResultsPage } from './ResultsPage';
 import type { FormState, IncomeOption, LocationSuggestion, QuestionnaireChoice, SimulationResult } from './types';
 
-const HOME_FEATURES = [
+export const HOME_FEATURES = [
   {
     description: (
       <>
@@ -23,7 +23,7 @@ const HOME_FEATURES = [
         des équipements.
       </>
     ),
-    iconClassName: 'fr-icon-bar-chart-2-fill',
+    iconClassName: 'fr-icon-pie-chart-box-fill',
     title: 'Estimation',
   },
   {
@@ -37,8 +37,13 @@ const HOME_FEATURES = [
   },
   {
     description: <>Les calculs sont simplifiés et ne remplacent pas un devis par un professionnel RGE.</>,
-    iconClassName: 'fr-icon-calculator-fill',
+    iconClassName: 'fr-icon-line-chart-fill',
     title: 'Calculs simplifiés',
+  },
+  {
+    description: <>Il est nécessaire d’en parler à un professionnel pour vous faire accompagner en toute neutralité.</>,
+    iconClassName: 'fr-icon-chat-3-fill',
+    title: 'Faites-vous accompagner',
   },
 ] as const;
 
@@ -250,7 +255,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
         Moins d’une minute
       </p>
       <div className="fr-grid-row fr-mt-5v">
-        {HOME_FEATURES.map((feature) => (
+        {HOME_FEATURES.slice(0, 3).map((feature) => (
           <article className="fr-col-12 fr-col-lg-4 fr-p-3w fr-grid-row home-feature" key={feature.title}>
             <div className="fr-col-auto">
               <span className={`${feature.iconClassName} fr-icon--lg`} aria-hidden="true" />
