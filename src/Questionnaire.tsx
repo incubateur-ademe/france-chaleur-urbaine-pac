@@ -1,3 +1,5 @@
+import type React from 'react';
+
 import {
   DPE_VALUES,
   type DpeInput,
@@ -9,32 +11,89 @@ import {
   type LocationSuggestion,
   type OwnerStatus,
   type QuestionnaireChoice,
+  type RouteOutcome,
 } from './types';
 
 const TOTAL_STEPS = 8;
+const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/';
+const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable';
+const RECOMMENDATIONS = {
+  apartment: {
+    ctaLabel: 'Découvrir la chaleur renouvelable',
+    description: (
+      <>
+        Mais pas de panique, rendez-vous sur le service public{' '}
+        <a href={FCU_URL} target="_blank" className="fr-link" rel="noopener">
+          France Chaleur Urbaine
+        </a>{' '}
+        pour découvrir le système de chauffage économique et écologique le plus adapté à votre bâtiment.
+      </>
+    ),
+    linkLabel: 'France Chaleur Urbaine',
+    title: 'Oups, ce simulateur est conçu pour les maisons individuelles !',
+    url: FCU_URL,
+  },
+  'electric-radiator': {
+    ctaLabel: 'sur Watt Watchers',
+    description: (
+      <>
+        Pas de panique, des solutions alternatives existent : pour les découvrir, rendez-vous sur{' '}
+        <a href={WATTWATCHERS_URL} className="fr-link" target="_blank" rel="noopener">
+          Watt Watchers
+        </a>
+      </>
+    ),
+    linkLabel: 'Watt Watchers',
+    title: 'Malheureusement, l’installation d’une PAC air/eau n’est pas recommandée dans votre maison.',
+    url: WATTWATCHERS_URL,
+  },
+  tenant: {
+    ctaLabel: 'Watt Watchers',
+    description: (
+      <>
+        Mais il existe de nombreuses autres solutions pour faire des économies énergies. Notre partenaire de confiance peut vous guider :
+        rendez-vous sur{' '}
+        <a href={WATTWATCHERS_URL} className="fr-link" target="_blank" rel="noopener">
+          Watt Watchers
+        </a>
+      </>
+    ),
+    linkLabel: 'Watt watchers',
+    title: "Oups, le remplacement d'une chaudière par une pompe à chaleur dépend de votre propriétaire !",
+    url: WATTWATCHERS_URL,
+  },
+} satisfies Record<
+  Exclude<RouteOutcome, 'continue'>,
+  {
+    ctaLabel: string;
+    description: React.ReactNode;
+    linkLabel: string;
+    title: string;
+    url: string;
+  }
+>;
 
 const STEP_TITLES = [
-  'Type de logement',
-  'Statut d’occupation',
-  'Chauffage actuel',
-  'Code postal',
+  "Statut d'occupation",
+  'Votre logement',
+  'Votre mode de chauffage',
+  'Votre code postal',
   'Votre DPE',
-  'Nombre d’habitants',
   'Surface chauffée',
-  'Catégorie MaPrimeRénov’',
+  'Composition du foyer',
+  'Votre situation',
 ] as const;
 
 const STEP_KICKERS = [
-  'VOTRE LOGEMENT',
-  'STATUT D’OCCUPATION',
-  'CHAUFFAGE ACTUEL',
-  'CODE POSTAL',
-  'VOTRE DPE',
-  'COMPOSITION DU FOYER',
-  'SURFACE CHAUFFÉE',
-  'REVENUS DU FOYER',
+  'Statut d’occupation',
+  'Type de logement',
+  'Chauffage actuel',
+  'Code postal',
+  'Classe Énergétique',
+  'Surface chauffée',
+  'Composition du foyer',
+  'Revenus du foyer',
 ] as const;
-
 type ChoiceStepConfig<TValue extends string> = {
   legend: string;
   hint?: string;
@@ -97,7 +156,7 @@ const DPE_STEP_CONFIG = {
   name: 'dpe',
   options: DPE_VALUES.map((dpeValue) => ({
     badgeClassName: dpeValue === 'unknown' ? undefined : `dpe-badge-${dpeValue.toLowerCase()}`,
-    label: dpeValue === 'unknown' ? 'Je ne sais pas' : dpeValue,
+    label: dpeValue === 'unknown' ? 'Je ne sais pas (une étiquette D sera enregistré)' : dpeValue,
     value: dpeValue,
   })),
 } satisfies ChoiceStepConfig<DpeInput>;
@@ -110,6 +169,7 @@ type QuestionnaireProps = {
   isIncomeOptionsLoading: boolean;
   isLocationLoading: boolean;
   locationSuggestions: LocationSuggestion[];
+  routeOutcome: RouteOutcome;
   onChoiceSelect: (choice: QuestionnaireChoice) => void;
   onEditStep: (step: number) => void;
   onFormChange: (changes: Partial<FormState>) => void;
@@ -126,6 +186,7 @@ export function Questionnaire({
   isIncomeOptionsLoading,
   isLocationLoading,
   locationSuggestions,
+  routeOutcome,
   onChoiceSelect,
   onEditStep,
   onFormChange,
@@ -135,10 +196,11 @@ export function Questionnaire({
 }: QuestionnaireProps) {
   const displayedIncomeOptions = incomeOptions.length > 0 ? incomeOptions : getFallbackIncomeOptions();
   const isNextDisabled = getIsNextDisabled(currentStep, formState);
+  const recommendationOutcome = getRecommendationOutcome(currentStep, routeOutcome);
   const completedStepSummaries = getCompletedStepSummaries(formState, currentStep);
 
   return (
-    <div>
+    <>
       <Stepper currentStep={currentStep} />
       <div className="question-stack">
         {completedStepSummaries.map((summary) => (
@@ -148,8 +210,8 @@ export function Questionnaire({
           <h2 className="fr-sr-only" id="active-question-title">
             {STEP_TITLES[currentStep - 1]}
           </h2>
-          <p className="fr-text-title--blue-france">
-            {STEP_KICKERS[currentStep - 1]} - QUESTION {currentStep}/{TOTAL_STEPS}
+          <p className="fr-text-title--blue-france uppercase">
+            {STEP_TITLES[currentStep - 1]} - QUESTION {currentStep}/{TOTAL_STEPS}
           </p>
           {renderActiveStep({
             currentStep,
@@ -163,7 +225,8 @@ export function Questionnaire({
             onLocationChange,
             onLocationSelect,
           })}
-          {getShouldShowNextAction(currentStep) && (
+          {recommendationOutcome && <RecommendationCallout outcome={recommendationOutcome} />}
+          {!recommendationOutcome && getShouldShowNextAction(currentStep) && (
             <StepActions
               isNextDisabled={isNextDisabled}
               nextLabel={currentStep === 8 ? 'Voir le résultat' : 'Continuer'}
@@ -177,19 +240,23 @@ export function Questionnaire({
           <p>{errorMessage}</p>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-function Stepper({ currentStep }: { currentStep: number }) {
-  const nextStepTitle = STEP_TITLES[currentStep];
+export function Stepper({ currentStep }: { currentStep: number }) {
+  const nextStepTitle = STEP_KICKERS[currentStep];
 
   return (
     <div className="fr-stepper">
       <h2 className="fr-stepper__title" id="step-title">
-        <span className="fr-stepper__state">
-          Étape {currentStep} sur {TOTAL_STEPS}
-        </span>
+        {currentStep === 8 ? (
+          <span>Vos résultats</span>
+        ) : (
+          <span className="fr-stepper__state">
+            Étape {currentStep} sur {TOTAL_STEPS}
+          </span>
+        )}
       </h2>
       <div className="fr-stepper__steps" data-fr-current-step={currentStep} data-fr-steps={TOTAL_STEPS} />
       {nextStepTitle && (
@@ -229,9 +296,9 @@ function renderActiveStep({
   if (currentStep === 1) {
     return (
       <ChoiceStep
-        {...HOUSING_TYPE_STEP_CONFIG}
-        selectedValue={formState.housingType}
-        onSelect={(housingType) => onChoiceSelect({ field: 'housingType', value: housingType })}
+        {...OWNER_STATUS_STEP_CONFIG}
+        selectedValue={formState.ownerStatus}
+        onSelect={(ownerStatus) => onChoiceSelect({ field: 'ownerStatus', value: ownerStatus })}
       />
     );
   }
@@ -239,9 +306,9 @@ function renderActiveStep({
   if (currentStep === 2) {
     return (
       <ChoiceStep
-        {...OWNER_STATUS_STEP_CONFIG}
-        selectedValue={formState.ownerStatus}
-        onSelect={(ownerStatus) => onChoiceSelect({ field: 'ownerStatus', value: ownerStatus })}
+        {...HOUSING_TYPE_STEP_CONFIG}
+        selectedValue={formState.housingType}
+        onSelect={(housingType) => onChoiceSelect({ field: 'housingType', value: housingType })}
       />
     );
   }
@@ -278,20 +345,9 @@ function renderActiveStep({
   if (currentStep === 6) {
     return (
       <NumberStep
-        inputId="occupants"
-        label="Combien d’habitants vivent dans le logement ?"
-        min={1}
-        value={formState.occupants}
-        onChange={(occupants) => onFormChange({ occupants })}
-      />
-    );
-  }
-
-  if (currentStep === 7) {
-    return (
-      <NumberStep
         inputId="surface"
-        label="Quelle est la surface chauffée ?"
+        label="Quelle est la surface chauffée du logement ?"
+        help="Surface habitable chauffée, en m². Vous la trouverez sur votre DPE ou acte notarié."
         min={1}
         suffix="m²"
         value={formState.surface}
@@ -300,11 +356,26 @@ function renderActiveStep({
     );
   }
 
+  if (currentStep === 7) {
+    return (
+      <NumberStep
+        inputId="occupants"
+        label="Combien de personnes vivent dans le logement ?"
+        help="Adultes et enfants compris, résidents habituels uniquement. Ce chiffre influence la consommation d'eau chaude."
+        min={1}
+        suffix="personnes"
+        value={formState.occupants}
+        onChange={(occupants) => onFormChange({ occupants })}
+      />
+    );
+  }
+
   return (
     <>
       {isIncomeOptionsLoading && <p className="fr-hint-text">Chargement des plafonds de revenus…</p>}
       <ChoiceStep
-        legend="Quel est le revenu fiscal de référence du ménage ?"
+        legend="Dans qulle tranche se situent les revenus du foyer ?"
+        hint="Il s'agit ici de la somme des revenus de votre foyer, vous pouvez le vérifier sur votre dernier avis d'imposition (revenu fiscal de référence)."
         name="incomeCategory"
         options={displayedIncomeOptions}
         selectedValue={formState.incomeCategory}
@@ -320,17 +391,12 @@ type CompletedStepSummary = {
   value: string;
 };
 
-type CompletedStepCardProps = {
-  summary: CompletedStepSummary;
-  onEditStep: (step: number) => void;
-};
-
-function CompletedStepCard({ summary, onEditStep }: CompletedStepCardProps) {
+function CompletedStepCard({ summary, onEditStep }: { summary: CompletedStepSummary; onEditStep: (step: number) => void }) {
   return (
     <article className="question-card question-card-completed">
       <span className="fr-icon-checkbox-circle-fill question-card-check" aria-hidden="true" />
       <div>
-        <p className="question-summary-label">{summary.label}</p>
+        <p className="fr-text-title--blue-france uppercase fr-mb-0">{summary.label}</p>
         <p className="question-summary-value">{summary.value}</p>
       </div>
       <button className="fr-btn fr-btn--tertiary-no-outline question-edit-button" type="button" onClick={() => onEditStep(summary.step)}>
@@ -394,19 +460,21 @@ function LocationStep({
 type NumberStepProps = {
   inputId: string;
   label: string;
+  help?: string;
   min: number;
   suffix?: string;
   value: string;
   onChange: (value: string) => void;
 };
 
-function NumberStep({ inputId, label, min, suffix, value, onChange }: NumberStepProps) {
+function NumberStep({ inputId, label, help, min, suffix, value, onChange }: NumberStepProps) {
   return (
     <div className="step-content">
       <div className="fr-input-group">
         <label className="fr-label" htmlFor={inputId}>
           {label}
         </label>
+        <div className="fr-hint-text fr-my-3v">{help}</div>
         <div className="input-with-suffix">
           <input
             className="fr-input"
@@ -486,20 +554,41 @@ function StepActions({ isNextDisabled = false, nextLabel = 'Continuer', onHandle
   );
 }
 
+type RecommendationCalloutProps = {
+  outcome: Exclude<RouteOutcome, 'continue'>;
+};
+
+function RecommendationCallout({ outcome }: RecommendationCalloutProps) {
+  const recommendation = RECOMMENDATIONS[outcome];
+
+  return (
+    <div className="fr-callout  fr-callout--blue-cumulus">
+      <p className="fr-text--lg fr-text--bold fr-text-title--blue-france fr-mb-3v">
+        <span className="fr-icon-info-fill fr-mr-3v" />
+        {recommendation.title}
+      </p>
+      <p className="fr-callout__text">{recommendation.description}</p>
+      <a className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line" href={recommendation.url} target="_blank" rel="noreferrer">
+        Aller sur {recommendation.ctaLabel}
+      </a>
+    </div>
+  );
+}
+
 function getCompletedStepSummaries(formState: FormState, currentStep: number) {
   const summaries: (CompletedStepSummary | null)[] = [
-    formState.housingType
+    formState.ownerStatus
       ? {
           label: STEP_KICKERS[0],
           step: 1,
-          value: HOUSING_TYPE_LABELS[formState.housingType],
+          value: OWNER_STATUS_LABELS[formState.ownerStatus],
         }
       : null,
-    formState.ownerStatus
+    formState.housingType
       ? {
           label: STEP_KICKERS[1],
           step: 2,
-          value: OWNER_STATUS_LABELS[formState.ownerStatus],
+          value: HOUSING_TYPE_LABELS[formState.housingType],
         }
       : null,
     formState.heatingEquipment
@@ -523,18 +612,18 @@ function getCompletedStepSummaries(formState: FormState, currentStep: number) {
           value: formState.dpe === 'unknown' ? 'Je ne sais pas' : formState.dpe,
         }
       : null,
-    isValidNumberInput(formState.occupants, 1)
+    isValidNumberInput(formState.surface, 1)
       ? {
           label: STEP_KICKERS[5],
           step: 6,
-          value: formState.occupants,
+          value: `${formState.surface} m²`,
         }
       : null,
-    isValidNumberInput(formState.surface, 1)
+    isValidNumberInput(formState.occupants, 1)
       ? {
           label: STEP_KICKERS[6],
           step: 7,
-          value: `${formState.surface} m²`,
+          value: formState.occupants,
         }
       : null,
     formState.incomeCategory
@@ -557,6 +646,20 @@ function getShouldShowNextAction(currentStep: number) {
   return currentStep === 4 || currentStep === 6 || currentStep === 7 || currentStep === 8;
 }
 
+function getRecommendationOutcome(currentStep: number, routeOutcome: RouteOutcome) {
+  if (routeOutcome === 'tenant' && currentStep === 1) {
+    return routeOutcome;
+  }
+  if (routeOutcome === 'apartment' && currentStep === 2) {
+    return routeOutcome;
+  }
+  if (routeOutcome === 'electric-radiator' && currentStep === 3) {
+    return routeOutcome;
+  }
+
+  return null;
+}
+
 function getFallbackIncomeOptions() {
   return INCOME_CATEGORY_VALUES.map((incomeCategory) => ({
     help: 'Sélectionnez si cela correspond à votre catégorie MaPrimeRénov’.',
@@ -567,11 +670,11 @@ function getFallbackIncomeOptions() {
 
 function getIsNextDisabled(currentStep: number, formState: FormState) {
   if (currentStep === 1) {
-    return formState.housingType === null;
+    return formState.ownerStatus === null;
   }
 
   if (currentStep === 2) {
-    return formState.ownerStatus === null;
+    return formState.housingType === null;
   }
 
   if (currentStep === 3) {
@@ -587,11 +690,11 @@ function getIsNextDisabled(currentStep: number, formState: FormState) {
   }
 
   if (currentStep === 6) {
-    return !isValidNumberInput(formState.occupants, 1);
+    return !isValidNumberInput(formState.surface, 1);
   }
 
   if (currentStep === 7) {
-    return !isValidNumberInput(formState.surface, 1);
+    return !isValidNumberInput(formState.occupants, 1);
   }
 
   return formState.incomeCategory === null;

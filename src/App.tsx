@@ -85,34 +85,25 @@ const HOME_FEATURES = [
   {
     description: (
       <>
-        Ce simulateur estime la facture d'énergie et émissions de CO₂ si vous passez d'une chaudière gaz ou fioul à une PAC air/eau
-        (chauffage et eau chaude) en maison individuelle.
+        <strong>Les informations présentées sont des estimations</strong> et peuvent varier en fonction des caractéristiques des logement et
+        des équipements.
       </>
     ),
-    iconClassName: 'fr-icon-home-4-fill fr-icon--lg',
-    title: 'Maison individuelle',
-  },
-  {
-    description: (
-      <>
-        <strong>Les informations présentées sont des estimations</strong> et peuvent varier selon votre logement et vos équipements.
-      </>
-    ),
-    iconClassName: 'fr-icon-bar-chart-box-fill fr-icon--lg',
+    iconClassName: 'fr-icon-bar-chart-2-fill',
     title: 'Estimation',
   },
   {
     description: (
       <>
-        Les aides estimées impliquent le <strong>remplacement de votre chaudière gaz ou fioul</strong>.
+        Les aides estimées dans les calculs impliquent le <strong>remplacement de la chaudière gaz ou fioul</strong>.
       </>
     ),
-    iconClassName: 'fr-icon-money-euro-box-fill fr-icon--lg',
+    iconClassName: 'fr-icon-money-euro-box-fill',
     title: 'Aides incluses',
   },
   {
     description: <>Les calculs sont simplifiés et ne remplacent pas un devis par un professionnel RGE.</>,
-    iconClassName: 'fr-icon-file-text-fill fr-icon--lg',
+    iconClassName: 'fr-icon-calculator-fill',
     title: 'Calculs simplifiés',
   },
 ] as const;
@@ -237,18 +228,18 @@ export function App() {
   };
 
   const handleQuestionnaireChoice = (choice: QuestionnaireChoice) => {
-    if (choice.field === 'housingType') {
-      handleChoiceChange({ housingType: choice.value }, choice.value === 'apartment' ? RESULT_STEP : 2);
+    if (choice.field === 'ownerStatus') {
+      handleChoiceChange({ ownerStatus: choice.value }, choice.value === 'tenant' ? 1 : 2);
       return;
     }
 
-    if (choice.field === 'ownerStatus') {
-      handleChoiceChange({ ownerStatus: choice.value }, choice.value === 'tenant' ? RESULT_STEP : 3);
+    if (choice.field === 'housingType') {
+      handleChoiceChange({ housingType: choice.value }, choice.value === 'apartment' ? 2 : 3);
       return;
     }
 
     if (choice.field === 'heatingEquipment') {
-      handleChoiceChange({ heatingEquipment: choice.value }, choice.value === 'electric-radiator' ? RESULT_STEP : 4);
+      handleChoiceChange({ heatingEquipment: choice.value }, choice.value === 'electric-radiator' ? 3 : 4);
       return;
     }
 
@@ -294,23 +285,23 @@ export function App() {
   };
 
   return (
-    <main className="fr-background-default--grey">
+    <main className="fr-background-default--grey simulator-pac">
       <div className="fr-container fr-py-4w">
         <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
           Retour
         </button>
         <div>
-          <h1>
-            Pompe à chaleur air/eau :<br /> Combien ça coûte, combien j’économise ?
+          <h1 className="fr-h2">
+            Vous avez une chaudière au gaz ou au fioul ?<br />
+            Combien ça coûte et combien on économise avec une pompe à chaleur air/eau ?
           </h1>
-          <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies. Cela prend moins de 2 minutes.</p>
         </div>
+        {currentStep !== RESULT_STEP && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
         {currentStep === INTRO_STEP && <HomeScreen onStart={() => setCurrentStep(1)} />}
         {currentStep === RESULT_STEP && (
           <ResultsPage
             errorMessage={errorMessage}
             isSubmitting={isSubmitting}
-            outcome={routeOutcome}
             result={result}
             onPrevious={() => handleStep('previous')}
             onRestart={handleRestart}
@@ -326,6 +317,7 @@ export function App() {
             isIncomeOptionsLoading={isIncomeOptionsLoading}
             isLocationLoading={isLocationLoading}
             locationSuggestions={locationSuggestions}
+            routeOutcome={routeOutcome}
             onFormChange={handleFormChange}
             onChoiceSelect={handleQuestionnaireChoice}
             onEditStep={handleEditStep}
@@ -346,11 +338,13 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
         <span className="fr-icon-time-fill fr-mr-1v" aria-hidden="true" />
         Moins d’une minute
       </p>
-      <div className="home-feature-grid">
+      <div className="fr-grid-row fr-mt-5v">
         {HOME_FEATURES.map((feature) => (
-          <article className="home-feature" key={feature.title}>
-            <span className={feature.iconClassName} aria-hidden="true" />
-            <div className="fr-ml-2v">
+          <article className="fr-col-12 fr-col-lg-4 fr-p-3w fr-grid-row home-feature" key={feature.title}>
+            <div className="fr-col-auto">
+              <span className={`${feature.iconClassName} fr-icon--lg`} aria-hidden="true" />
+            </div>
+            <div className="fr-col fr-pl-3v">
               <h2 className="fr-h4">{feature.title}</h2>
               <p className="fr-mb-0">{feature.description}</p>
             </div>
@@ -362,7 +356,7 @@ function HomeScreen({ onStart }: { onStart: () => void }) {
       </button>
       <p className="fr-mt-3v">
         Vous pouvez accéder à un simulateur plus détaillé sur{' '}
-        <a href="https://france-chaleur-urbaine.beta.gouv.fr/" target="_blank" rel="noreferrer">
+        <a href="https://france-chaleur-urbaine.beta.gouv.fr/" className="fr-link" target="_blank" rel="noreferrer">
           France Chaleur Urbaine
         </a>
         .
@@ -428,15 +422,23 @@ function getInitialStep(searchParams: URLSearchParams, formState: FormState) {
 function getLastAvailableStep(formState: FormState) {
   const routeOutcome = getRouteOutcome(formState);
 
-  if (routeOutcome !== 'continue') {
-    return RESULT_STEP;
+  if (routeOutcome === 'apartment') {
+    return 2;
   }
 
-  if (!formState.housingType) {
+  if (routeOutcome === 'tenant') {
     return 1;
   }
 
+  if (routeOutcome === 'electric-radiator') {
+    return 3;
+  }
+
   if (!formState.ownerStatus) {
+    return 1;
+  }
+
+  if (!formState.housingType) {
     return 2;
   }
 
@@ -534,11 +536,11 @@ function getPreviousStep(currentStep: number, formState: FormState) {
   const routeOutcome = getRouteOutcome(formState);
 
   if (currentStep === RESULT_STEP && routeOutcome === 'tenant') {
-    return 2;
+    return 1;
   }
 
   if (currentStep === RESULT_STEP && routeOutcome === 'apartment') {
-    return 1;
+    return 2;
   }
 
   if (currentStep === RESULT_STEP && routeOutcome === 'electric-radiator') {

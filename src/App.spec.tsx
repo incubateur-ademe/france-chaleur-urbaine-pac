@@ -29,8 +29,8 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Démarrer la simulation' }));
 
     expect(window.location.search).toBe('?step=1');
-    expect(screen.getByText(/Quel est le type de votre logement/i)).toBeInTheDocument();
-    expect(screen.getByLabelText('Maison individuelle')).toBeInTheDocument();
+    expect(screen.getByText(/Êtes-vous propriétaire/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Je suis propriétaire')).toBeInTheDocument();
   });
 
   it('keeps default form values out of the URL', () => {
@@ -46,11 +46,49 @@ describe('App', () => {
 
     render(<App />);
 
-    fireEvent.click(screen.getByLabelText('Maison individuelle'));
+    fireEvent.click(screen.getByLabelText('Je suis propriétaire'));
 
-    expect(window.location.search).toContain('housing=house');
-    expect(screen.getByText('Type de logement')).toBeInTheDocument();
-    expect(screen.getByLabelText('Propriétaire')).toBeInTheDocument();
+    expect(window.location.search).toContain('situation=owner');
+    expect(screen.getByText('Statut d’occupation')).toBeInTheDocument();
+    expect(screen.getByLabelText('Une maison individuelle')).toBeInTheDocument();
+  });
+
+  it('shows an inline recommendation and stops the journey for electric radiators', () => {
+    window.history.replaceState(null, '', '/?step=3&housing=house&situation=owner');
+
+    render(<App />);
+
+    fireEvent.click(screen.getByLabelText('Radiateur électrique'));
+
+    expect(window.location.search).toContain('step=3');
+    expect(
+      screen.getByText('Malheureusement, l’installation d’une PAC air/eau n’est pas recommandée dans votre maison.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Aller sur .*Watt Watchers/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continuer' })).not.toBeInTheDocument();
+  });
+
+  it('shows the heated surface before the occupant count', () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/?step=6&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&departmentCode=64&postcode=64200&dpe=D'
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        return new Response(JSON.stringify([]), {
+          headers: { 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      }) satisfies typeof fetch
+    );
+
+    render(<App />);
+
+    expect(screen.getByText('Surface chauffée - QUESTION 6/8')).toBeInTheDocument();
+    expect(screen.getByLabelText('Quelle est la surface chauffée ?')).toBeInTheDocument();
+    expect(screen.getByText(/Étape suivante :/).parentElement).toHaveTextContent('Nombre d’habitants');
   });
 
   it('hides following answers when editing a previous step', () => {
@@ -58,13 +96,13 @@ describe('App', () => {
 
     render(<App />);
 
-    expect(screen.getByText('Statut d’occupation')).toBeInTheDocument();
+    expect(screen.getByText('Type de logement')).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Modifier' })[0]);
 
     expect(window.location.search).toContain('step=1');
-    expect(screen.queryByText('Propriétaire')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Maison individuelle')).toBeInTheDocument();
+    expect(screen.queryByText('Maison individuelle')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Je suis propriétaire')).toBeInTheDocument();
   });
 
   it('selects a postcode and city from the autocomplete', async () => {
