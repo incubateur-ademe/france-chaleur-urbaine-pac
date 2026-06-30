@@ -402,13 +402,6 @@
   font-size: 1.125rem;
 }
 
-.result-section p,
-.annual-bills-heading span,
-.annual-bill-row small {
-  margin: 0;
-  color: var(--text-mention-grey);
-}
-
 .cost-table,
 .comparison-table {
   display: grid;
@@ -426,7 +419,15 @@
 
 .cost-row {
   grid-template-columns: minmax(0, 1fr) auto;
-  padding: 0.65rem 0;
+  padding: 0.65rem 0.75rem;
+}
+
+.cost-row-total {
+  background: var(--background-contrast-grey);
+}
+
+.ptz {
+  background: #e8edff;
 }
 
 .cost-row strong,
@@ -462,11 +463,22 @@
 }
 
 .annual-bill-row {
-  grid-template-columns: 8rem minmax(8rem, 1fr) 9rem;
+  grid-template-columns: 13rem minmax(10rem, 36rem) 12rem;
   padding: 0.4rem 0;
+  border-bottom: 0;
 }
 
-.annual-bill-row strong {
+.annual-bill-label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.annual-bill-label strong {
+  color: var(--text-title-grey);
+  font-size: 1.05rem;
+}
+
+.annual-bill-label .annual-bill-label-pac {
   color: var(--text-title-blue-france);
 }
 
@@ -491,26 +503,54 @@
   background: #c74700;
 }
 
-.annual-bill-row span {
+.annual-bill-metrics {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
+.annual-bill-metrics strong {
   font-weight: 700;
+  white-space: nowrap;
   text-align: right;
 }
 
-.annual-bill-row small {
-  grid-column: 3;
-  margin-top: -0.5rem;
+.annual-bill-metrics small {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
   text-align: right;
+}
+
+.annual-bill-co2-pac {
+  color: #18753c;
+}
+
+.annual-bill-co2-gas {
+  color: #c74700;
+}
+
+.annual-bill-co2-oil {
+  color: #a94645;
+}
+
+.annual-bills-footer {
+  display: grid;
+  grid-template-columns: 13rem minmax(10rem, 36rem) 12rem;
+  align-items: start;
 }
 
 .annual-bills-scale {
   display: grid;
-  grid-template-columns: 8rem 1fr 1fr 9rem;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--border-default-grey);
   color: var(--text-mention-grey);
   font-size: 0.75rem;
+  grid-column: 2;
 }
 
 .annual-bills-scale span:nth-child(1) {
-  grid-column: 2;
+  grid-column: auto;
 }
 
 .annual-bills-scale span:nth-child(2) {
@@ -521,27 +561,30 @@
   text-align: right;
 }
 
-.comparison-row {
-  grid-template-columns: minmax(8rem, 1fr) minmax(8rem, 1fr) minmax(8rem, 1fr);
-  gap: 0;
-  padding: 0;
+.annual-bills-caption {
+  grid-column: 3;
+  justify-self: end;
+  margin: 0;
+  color: var(--text-mention-grey);
+  font-size: 0.75rem;
+  text-align: right;
 }
 
-.comparison-row-heading {
-  align-items: end;
-  color: var(--text-title-blue-france);
-  font-size: 0.875rem;
+.comparison-row {
+  grid-template-columns: minmax(7rem, 0.7fr) minmax(14rem, 1.15fr) minmax(15rem, 1.25fr);
+  gap: 0;
+  padding: 0;
 }
 
 .comparison-row strong:nth-child(3) {
   color: var(--text-title-blue-france);
 }
 
-.comparison-row > span,
-.comparison-row > strong {
+.comparison-row > span {
   min-height: 3.25rem;
-  align-content: center;
-  padding: 0.75rem 1.25rem;
+  padding: 0.5rem;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .comparison-row > span:first-child {
@@ -707,19 +750,29 @@
   }
 
   .cost-row strong,
-  .annual-bill-row span,
-  .annual-bill-row small,
+  .annual-bill-metrics,
+  .annual-bill-metrics strong,
   .comparison-row strong {
+    justify-items: start;
     text-align: left;
+  }
+
+  .comparison-row > strong {
+    white-space: normal;
   }
 
   .comparison-row-saving span {
     display: none;
   }
 
-  .annual-bill-row small {
+  .annual-bills-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .annual-bills-caption {
     grid-column: auto;
-    margin-top: -0.25rem;
+    justify-self: start;
+    text-align: left;
   }
 
   .annual-bills-scale {

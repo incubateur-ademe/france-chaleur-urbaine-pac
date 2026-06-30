@@ -210,6 +210,7 @@ export function App() {
         {currentStep === INTRO_STEP && <HomeScreen onStart={() => setCurrentStep(1)} />}
         {currentStep === RESULT_STEP && (
           <ResultsPage
+            currentHeatingEquipment={formState.heatingEquipment}
             errorMessage={errorMessage}
             isSubmitting={isSubmitting}
             result={result}

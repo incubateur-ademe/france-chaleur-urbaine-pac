@@ -1,10 +1,11 @@
 import { Stepper } from '@/Questionnaire';
 
-import type { HeatingModeComparison, SimulationResult } from './types';
+import type { HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
 
 const BOILER_REPLACEMENT_PRICE = 5000;
 
 type ResultsPageProps = {
+  currentHeatingEquipment: HeatingEquipment | null;
   errorMessage: string | null;
   isSubmitting: boolean;
   result: SimulationResult | null;
@@ -16,9 +17,18 @@ type ResultsPageProps = {
 /**
  * Displays the detailed PAC comparison report at the end of the simulator journey.
  */
-export function ResultsPage({ errorMessage, isSubmitting, result, onPrevious, onRestart, onRetry }: ResultsPageProps) {
+export function ResultsPage({
+  currentHeatingEquipment,
+  errorMessage,
+  isSubmitting,
+  result,
+  onPrevious,
+  onRestart,
+  onRetry,
+}: ResultsPageProps) {
   return (
     <SimulationResultContent
+      currentHeatingEquipment={currentHeatingEquipment}
       errorMessage={errorMessage}
       isSubmitting={isSubmitting}
       result={result}
@@ -30,6 +40,7 @@ export function ResultsPage({ errorMessage, isSubmitting, result, onPrevious, on
 }
 
 type SimulationResultContentProps = {
+  currentHeatingEquipment: HeatingEquipment | null;
   errorMessage: string | null;
   isSubmitting: boolean;
   result: SimulationResult | null;
@@ -41,7 +52,15 @@ type SimulationResultContentProps = {
 /**
  * Handles loading, error and success states for the simulation result page.
  */
-function SimulationResultContent({ errorMessage, isSubmitting, result, onPrevious, onRestart, onRetry }: SimulationResultContentProps) {
+function SimulationResultContent({
+  currentHeatingEquipment,
+  errorMessage,
+  isSubmitting,
+  result,
+  onPrevious,
+  onRestart,
+  onRetry,
+}: SimulationResultContentProps) {
   return (
     <section className="step-content result-panel" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
@@ -50,7 +69,7 @@ function SimulationResultContent({ errorMessage, isSubmitting, result, onPreviou
           <p>{errorMessage}</p>
         </div>
       )}
-      {result && <Results result={result} />}
+      {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} />}
       <div className="step-actions">
         <button className="fr-btn fr-btn--secondary" type="button" onClick={onPrevious}>
           Précédent
@@ -69,14 +88,15 @@ function SimulationResultContent({ errorMessage, isSubmitting, result, onPreviou
 }
 
 type ResultsProps = {
+  currentHeatingEquipment: HeatingEquipment | null;
   result: SimulationResult;
 };
 
 /**
  * Presents the PAC result as a decision report with costs, energy and aid details.
  */
-function Results({ result }: ResultsProps) {
-  const annualBillRows = getAnnualBillRows(result);
+function Results({ currentHeatingEquipment, result }: ResultsProps) {
+  const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
   const maxAnnualBill = Math.max(...annualBillRows.map((annualBillRow) => annualBillRow.amount), 1);
   const estimatedAid = result.heatPumpMaprimerenovAid + result.heatPumpBoilerReplacementBonus;
   const boilerAverageAnnualBill = (result.gasBoilerAnnualBill + result.oilBoilerAnnualBill) / 2;
@@ -259,6 +279,7 @@ function CostAndAidDetails({ result }: CostAndAidDetailsProps) {
     },
     {
       label: 'Reste à charge estimé',
+      rowClassName: 'cost-row-total fr-text--bold',
       value: formatCurrency(result.heatPumpNetPrice),
       valueClassName: 'cost-total',
     },
@@ -266,27 +287,32 @@ function CostAndAidDetails({ result }: CostAndAidDetailsProps) {
 
   return (
     <section className="result-section" aria-labelledby="cost-and-aid-title">
-      <SectionHeading iconClassName="fr-icon-money-euro-circle-line" id="cost-and-aid-title" title="Coût d’installation et aides" />
-      <p>
+      <SectionHeading iconClassName="fr-icon-money-euro-box-fill" title="Coût d’installation et aides" />
+      <p className="fr-mb-0">
         Le montant des aides dépend de vos revenus. Plus d’infos sur <a href="https://france-renov.gouv.fr/aides">france-renov.gouv.fr</a>.
       </p>
       <div className="cost-table">
         {costRows.map((costRow) => (
-          <div className="cost-row" key={costRow.label}>
+          <div className={`cost-row ${costRow.rowClassName ?? ''}`} key={costRow.label}>
             <span>{costRow.label}</span>
             <strong className={costRow.valueClassName}>{costRow.value}</strong>
           </div>
         ))}
       </div>
-      <div className="fr-alert fr-alert--info">
-        <p>Vous pouvez financer le reste à charge avec un éco-prêt à taux zéro (éco-PTZ), sans avance de trésorerie. En savoir plus</p>
-      </div>
+      <p className="ptz fr-p-3v">
+        <span className="fr-icon-info-fill fr-text-title--blue-france fr-mr-3v" aria-hidden="true" />
+        Vous pouvez financer le reste à charge avec un éco-prêt à taux zéro (éco-PTZ), sans avance de trésorerie.{' '}
+        <a href="https://france-renov.gouv.fr/aides/eco-pret-taux-zero" className="fr-link" target="_blank" rel="noopener">
+          En savoir plus
+        </a>
+      </p>
     </section>
   );
 }
 
 type CostRow = {
   label: string;
+  rowClassName?: string;
   value: string;
   valueClassName: string;
 };
@@ -295,6 +321,9 @@ type AnnualBillRow = {
   amount: number;
   colorClassName: string;
   co2: number;
+  co2ClassName: string;
+  description?: string;
+  labelClassName?: string;
   label: string;
 };
 
@@ -310,28 +339,40 @@ function AnnualBillsChart({ annualBillRows, maxAnnualBill }: AnnualBillsChartPro
   return (
     <section className="result-section annual-bills" aria-labelledby="annual-bills-title">
       <div className="annual-bills-heading">
-        <SectionHeading iconClassName="fr-icon-bar-chart-box-line" id="annual-bills-title" title="Votre facture énergétique annuelle" />
-        <span>Comparaison entre votre chaudière actuelle et une PAC, chauffage et eau chaude compris, hors entretien.</span>
+        <SectionHeading iconClassName="fr-icon-line-chart-fill" title="Votre facture énergétique annuelle" />
+        <span>
+          Comparaison entre votre chaudière actuelle et une PAC, <strong>chauffage et eau chaude</strong> compris, hors entretien.
+        </span>
       </div>
       <div className="annual-bills-list">
         {annualBillRows.map((annualBillRow) => (
           <div className="annual-bill-row" key={annualBillRow.label}>
-            <strong>{annualBillRow.label}</strong>
+            <div className="annual-bill-label">
+              <strong className={annualBillRow.labelClassName}>{annualBillRow.label}</strong>
+              {annualBillRow.description && <small>{annualBillRow.description}</small>}
+            </div>
             <div className="annual-bill-track" aria-hidden="true">
               <div
                 className={`annual-bill-value ${annualBillRow.colorClassName}`}
                 style={{ width: `${Math.max((annualBillRow.amount / maxAnnualBill) * 100, 4)}%` }}
               />
             </div>
-            <span>{formatAnnualRange(annualBillRow.amount)}</span>
-            <small>{formatNumber(annualBillRow.co2)} tCO²/an</small>
+            <div className="annual-bill-metrics">
+              <strong>{formatAnnualBillRange(annualBillRow.amount)}</strong>
+              <small className={annualBillRow.co2ClassName}>
+                <span className="fr-icon-leaf-fill" aria-hidden="true" /> {formatNumber(annualBillRow.co2 / 1000)} t
+              </small>
+            </div>
           </div>
         ))}
       </div>
-      <div className="annual-bills-scale" aria-hidden="true">
-        <span>0</span>
-        <span>{formatCurrency(maxAnnualBill / 2)}</span>
-        <span>{formatCurrency(maxAnnualBill)}</span>
+      <div className="annual-bills-footer">
+        <div className="annual-bills-scale" aria-hidden="true">
+          <span>0</span>
+          <span>{formatCurrency(maxAnnualBill / 2)}</span>
+          <span>{formatCurrency(maxAnnualBill)}</span>
+        </div>
+        <p className="annual-bills-caption">factures /an + CO² émis /an</p>
       </div>
     </section>
   );
@@ -357,43 +398,40 @@ function FifteenYearComparison({
 }: FifteenYearComparisonProps) {
   return (
     <section className="result-section" aria-labelledby="fifteen-year-title">
-      <SectionHeading
-        iconClassName="fr-icon-scales-3-line"
-        id="fifteen-year-title"
-        title="PAC ou nouvelle chaudière : le coût sur 15 ans"
-      />
+      <SectionHeading iconClassName="fr-icon-scales-3-line" title="PAC ou nouvelle chaudière : le coût sur 15 ans" />
       <p>
         Tôt ou tard, votre chaudière devra être remplacée. À budget d’installation comparable, voici ce que chaque choix vous coûte au fil
         des années, installation et factures cumulées.
       </p>
       <div className="comparison-table">
-        <div className="comparison-row comparison-row-heading">
+        <div className="comparison-row">
           <span />
-          <strong>Remplacer la chaudière à l’identique</strong>
-          <strong className="comparison-pac-cell comparison-pac-cell-top">Installer une pompe à chaleur</strong>
+          <span>Remplacer la chaudière à l’identique</span>
+          <span className="comparison-pac-cell comparison-pac-cell-top fr-text-title--blue-france">Installer une pompe à chaleur</span>
         </div>
         <div className="comparison-row">
           <span>Coût d’installation</span>
-          <strong>≈ {formatCurrency(BOILER_REPLACEMENT_PRICE)}</strong>
-          <strong className="comparison-pac-cell">{formatCurrency(heatPumpNetPrice)}</strong>
+          <span>≈ {formatCurrency(BOILER_REPLACEMENT_PRICE)}</span>
+          <span className="comparison-pac-cell">{formatCurrency(heatPumpNetPrice)}</span>
         </div>
         <div className="comparison-row">
-          <span>Facture annuelle</span>
-          <strong>{formatAnnualRange(boilerAnnualBill)}</strong>
-          <strong className="comparison-pac-cell">{formatAnnualRange(heatPumpAnnualBill)}</strong>
+          <span className="fr-text--start">Facture annuelle</span>
+          <span>{formatAnnualRange(boilerAnnualBill)}</span>
+          <span className="comparison-pac-cell">{formatAnnualRange(heatPumpAnnualBill)}</span>
         </div>
         <div className="comparison-row comparison-row-saving">
           <span />
           <span />
-          <strong className="comparison-pac-cell comparison-pac-cell-bottom">
-            ≈ {formatCurrency(annualSavings)} / an d’économies annuelles
-          </strong>
+          <span className="comparison-pac-cell comparison-pac-cell-bottom">
+            ≈ <strong>{formatCurrency(annualSavings)}</strong> / an d’économies annuelles
+          </span>
         </div>
       </div>
       <div className="fr-callout fr-callout--green-emeraude" style={{ backgroundColor: '#F8FAFF' }}>
         <p>
           À budget comparable, <b>la pompe à chaleur revient moins cher</b> dès la première année. Au bout de 15 ans, vous auriez dépensé
-          environ <strong>{formatCurrency(fifteenYearSavings)} de moins</strong> qu’avec une nouvelle chaudière.
+          environ <strong className="fr-text-default--success">{formatCurrency(fifteenYearSavings)} de moins</strong> qu’avec une nouvelle
+          chaudière.
         </p>
       </div>
     </section>
@@ -407,22 +445,22 @@ function MethodNotes() {
   const notes = [
     {
       description: 'Les informations présentées sont des estimations et peuvent varier selon votre logement.',
-      iconClassName: 'fr-icon-bar-chart-box-line',
+      iconClassName: 'fr-icon-bar-chart-2-fill',
       title: 'Estimation',
     },
     {
       description: 'Les aides estimées dans les calculs impliquent le remplacement de la chaudière gaz ou fioul.',
-      iconClassName: 'fr-icon-money-euro-circle-line',
+      iconClassName: 'fr-icon-money-euro-box-fill',
       title: 'Aides incluses',
     },
     {
       description: 'Les calculs sont simplifiés et ne remplacent pas un devis par un professionnel RGE.',
-      iconClassName: 'fr-icon-file-text-line',
+      iconClassName: 'fr-icon-calculator-fill',
       title: 'Calculs simplifiés',
     },
     {
       description: 'Faites accompagner votre projet par un professionnel pour réussir vos travaux.',
-      iconClassName: 'fr-icon-chat-check-line',
+      iconClassName: 'fr-icon-chat-3-fill',
       title: 'Faites-vous accompagner',
     },
   ] satisfies MethodNote[];
@@ -448,44 +486,50 @@ type MethodNote = {
   title: string;
 };
 
-type SectionHeadingProps = {
-  iconClassName: string;
-  id: string;
-  title: string;
-};
-
-/**
- * Renders a compact section title with a DSFR icon.
- */
-function SectionHeading({ iconClassName, id, title }: SectionHeadingProps) {
+function SectionHeading({ iconClassName, title }: { iconClassName: string; title: string }) {
   return (
-    <h3 id={id}>
+    <h3>
       <span className={iconClassName} aria-hidden="true" /> {title}
     </h3>
   );
 }
 
-function getAnnualBillRows(result: SimulationResult) {
+function getAnnualBillRows(result: SimulationResult, currentHeatingEquipment: HeatingEquipment | null) {
+  const currentHeatingMode = getCurrentHeatingMode(result, currentHeatingEquipment);
+
   return [
+    currentHeatingMode,
     {
       amount: result.heatPumpAnnualBill,
       co2: getComparisonCo2(result.heatingModeComparisons, 'PAC air/eau'),
+      co2ClassName: 'annual-bill-co2-pac',
       colorClassName: 'annual-bill-pac',
       label: 'PAC air/eau',
-    },
-    {
-      amount: result.gasBoilerAnnualBill,
-      co2: getComparisonCo2(result.heatingModeComparisons, 'Chaudière gaz condensation'),
-      colorClassName: 'annual-bill-gas',
-      label: 'Chaudière gaz',
-    },
-    {
-      amount: result.oilBoilerAnnualBill,
-      co2: getComparisonCo2(result.heatingModeComparisons, 'Chaudière fioul'),
-      colorClassName: 'annual-bill-oil',
-      label: 'Chaudière fioul',
+      labelClassName: 'annual-bill-label-pac',
     },
   ] satisfies AnnualBillRow[];
+}
+
+function getCurrentHeatingMode(result: SimulationResult, currentHeatingEquipment: HeatingEquipment | null): AnnualBillRow {
+  if (currentHeatingEquipment === 'oil-boiler') {
+    return {
+      amount: result.oilBoilerAnnualBill,
+      co2: getComparisonCo2(result.heatingModeComparisons, 'Chaudière fioul'),
+      co2ClassName: 'annual-bill-co2-oil',
+      colorClassName: 'annual-bill-oil',
+      description: 'Mode de chauffage actuel',
+      label: 'Chaudière fioul',
+    };
+  }
+
+  return {
+    amount: result.gasBoilerAnnualBill,
+    co2: getComparisonCo2(result.heatingModeComparisons, 'Chaudière gaz condensation'),
+    co2ClassName: 'annual-bill-co2-gas',
+    colorClassName: 'annual-bill-gas',
+    description: 'Mode de chauffage actuel',
+    label: 'Chaudière gaz',
+  };
 }
 
 function getComparisonCo2(comparisons: HeatingModeComparison[], label: string) {
@@ -512,6 +556,13 @@ function formatAnnualRange(value: number) {
   const highValue = Math.round((value * 1.1) / 10) * 10;
 
   return `${formatCurrency(lowValue)} - ${formatCurrency(highValue)}/an`;
+}
+
+function formatAnnualBillRange(value: number) {
+  const lowValue = Math.round((value * 0.9) / 10) * 10;
+  const highValue = Math.round((value * 1.1) / 10) * 10;
+
+  return `${formatCurrency(lowValue)} - ${formatCurrency(highValue)}`;
 }
 
 function formatNumber(value: number) {
