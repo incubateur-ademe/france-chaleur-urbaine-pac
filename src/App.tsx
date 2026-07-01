@@ -2,95 +2,36 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { fetchHeatingSimulation, fetchIncomeOptions, searchMunicipalities } from './api';
 import { HomeScreen } from './HomeScreen';
+import { Questionnaire } from './Questionnaire';
 import {
   getInitialJourneyState,
   getPreviousStep,
   getRouteOutcome,
   getSearchParams,
-  getUrlWithSearchParams,
   INITIAL_FORM_STATE,
-  INTRO_STEP,
   RESULT_STEP,
-} from './journey';
-import { Questionnaire } from './Questionnaire';
+} from './questionnaire';
 import { ResultsPage } from './ResultsPage';
-import type { FormState, IncomeOption, LocationSuggestion, QuestionnaireChoice, SimulationResult } from './types';
+import type { FormState, IncomeOption, LocationSuggestion, QuestionnaireChoice, SimulationFormState, SimulationResult } from './types';
 
 export function App() {
   const initialState = useMemo(() => getInitialJourneyState(), []);
   const [currentStep, setCurrentStep] = useState(initialState.currentStep);
   const [formState, setFormState] = useState<FormState>(initialState.formState);
-  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
-  const [incomeOptions, setIncomeOptions] = useState<IncomeOption[]>([]);
-  const [isLocationLoading, setIsLocationLoading] = useState(false);
-  const [isIncomeOptionsLoading, setIsIncomeOptionsLoading] = useState(false);
+  const { clearLocationSuggestions, isLocationLoading, locationSuggestions } = useLocationSuggestions(formState);
+  const { clearIncomeOptions, incomeOptions, isIncomeOptionsLoading } = useIncomeOptions(formState);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const occupants = Number(formState.occupants);
   const routeOutcome = getRouteOutcome(formState);
 
   useEffect(() => {
     const searchParams = getSearchParams(formState, currentStep);
-    window.history.replaceState(null, '', getUrlWithSearchParams(searchParams));
+    const serializedSearchParams = searchParams.toString();
+    const url = serializedSearchParams ? `${window.location.pathname}?${serializedSearchParams}` : window.location.pathname;
+
+    window.history.replaceState(null, '', url);
   }, [currentStep, formState]);
-
-  useEffect(() => {
-    if (formState.location.length < 3 || formState.selectedLocation?.label === formState.location) {
-      setLocationSuggestions([]);
-      setIsLocationLoading(false);
-      return;
-    }
-
-    const abortController = new AbortController();
-    setIsLocationLoading(true);
-
-    searchMunicipalities(formState.location, abortController.signal)
-      .then((suggestions) => {
-        setLocationSuggestions(suggestions);
-      })
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return;
-        }
-      })
-      .finally(() => {
-        if (!abortController.signal.aborted) {
-          setIsLocationLoading(false);
-        }
-      });
-
-    return () => abortController.abort();
-  }, [formState.location, formState.selectedLocation]);
-
-  useEffect(() => {
-    if (!formState.selectedLocation || !Number.isFinite(occupants) || occupants < 1) {
-      setIncomeOptions([]);
-      setIsIncomeOptionsLoading(false);
-      return;
-    }
-
-    const abortController = new AbortController();
-    setIsIncomeOptionsLoading(true);
-
-    fetchIncomeOptions(formState.selectedLocation, occupants, abortController.signal)
-      .then((options) => {
-        setIncomeOptions(options);
-      })
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return;
-        }
-        setIncomeOptions([]);
-      })
-      .finally(() => {
-        if (!abortController.signal.aborted) {
-          setIsIncomeOptionsLoading(false);
-        }
-      });
-
-    return () => abortController.abort();
-  }, [formState.selectedLocation, occupants]);
 
   useEffect(() => {
     if (currentStep !== RESULT_STEP || routeOutcome !== 'continue' || result || isSubmitting) {
@@ -135,7 +76,7 @@ export function App() {
 
   const handleLocationSelect = (selectedLocation: LocationSuggestion) => {
     handleFormChange({ location: selectedLocation.label, selectedLocation });
-    setLocationSuggestions([]);
+    clearLocationSuggestions();
   };
 
   const handleStep = (action: 'previous' | 'next') => {
@@ -151,13 +92,19 @@ export function App() {
   const handleRestart = () => {
     setCurrentStep(1);
     setFormState(INITIAL_FORM_STATE);
-    setLocationSuggestions([]);
-    setIncomeOptions([]);
+    clearLocationSuggestions();
+    clearIncomeOptions();
     setResult(null);
   };
 
   const handleBack = () => {
-    window.history.back();
+    if (currentStep === 0) {
+      window.history.back();
+      return;
+    }
+
+    setResult(null);
+    setCurrentStep(getPreviousStep(currentStep, formState));
   };
 
   return (
@@ -173,7 +120,7 @@ export function App() {
           </h1>
         </div>
         {currentStep !== RESULT_STEP && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
-        {currentStep === INTRO_STEP && <HomeScreen onStart={() => setCurrentStep(1)} />}
+        {currentStep === 0 && <HomeScreen onStart={() => setCurrentStep(1)} />}
         {currentStep === RESULT_STEP && (
           <ResultsPage
             currentHeatingEquipment={formState.heatingEquipment}
@@ -183,7 +130,7 @@ export function App() {
             onRestart={handleRestart}
           />
         )}
-        {currentStep > INTRO_STEP && currentStep < RESULT_STEP && (
+        {currentStep > 0 && currentStep < RESULT_STEP && (
           <Questionnaire
             currentStep={currentStep}
             formState={formState}
@@ -205,6 +152,84 @@ export function App() {
   );
 }
 
+function useLocationSuggestions(formState: FormState) {
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const clearLocationSuggestions = () => setLocationSuggestions([]);
+
+  useEffect(() => {
+    if (formState.location.length < 3 || formState.selectedLocation?.label === formState.location) {
+      setLocationSuggestions([]);
+      setIsLocationLoading(false);
+      return;
+    }
+
+    const abortController = new AbortController();
+    setIsLocationLoading(true);
+
+    searchMunicipalities(formState.location, abortController.signal)
+      .then((suggestions) => {
+        setLocationSuggestions(suggestions);
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+      })
+      .finally(() => {
+        if (!abortController.signal.aborted) {
+          setIsLocationLoading(false);
+        }
+      });
+
+    return () => abortController.abort();
+  }, [formState.location, formState.selectedLocation]);
+
+  return { clearLocationSuggestions, isLocationLoading, locationSuggestions };
+}
+
+function useIncomeOptions(formState: FormState) {
+  const [incomeOptions, setIncomeOptions] = useState<IncomeOption[]>([]);
+  const [isIncomeOptionsLoading, setIsIncomeOptionsLoading] = useState(false);
+  const clearIncomeOptions = () => setIncomeOptions([]);
+  const occupants = Number(formState.occupants);
+
+  useEffect(() => {
+    if (!formState.selectedLocation || !Number.isFinite(occupants) || occupants < 1) {
+      setIncomeOptions([]);
+      setIsIncomeOptionsLoading(false);
+      return;
+    }
+
+    const abortController = new AbortController();
+    setIsIncomeOptionsLoading(true);
+
+    fetchIncomeOptions(formState.selectedLocation, occupants, abortController.signal)
+      .then((options) => {
+        setIncomeOptions(options);
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        setIncomeOptions([]);
+      })
+      .finally(() => {
+        if (!abortController.signal.aborted) {
+          setIsIncomeOptionsLoading(false);
+        }
+      });
+
+    return () => abortController.abort();
+  }, [formState.selectedLocation, occupants]);
+
+  return { clearIncomeOptions, incomeOptions, isIncomeOptionsLoading };
+}
+
+function isSimulationReady(formState: FormState): formState is SimulationFormState {
+  return formState.selectedLocation !== null && formState.dpe !== null && formState.incomeCategory !== null;
+}
+
 async function runSimulation(
   formState: FormState,
   setResult: (result: SimulationResult | null) => void,
@@ -212,9 +237,6 @@ async function runSimulation(
 ) {
   setResult(null);
 
-  function isSimulationReady(formState: FormState): formState is SimulationFormState {
-    return formState.selectedLocation !== null && formState.dpe !== null && formState.incomeCategory !== null;
-  }
   if (!isSimulationReady(formState)) {
     return;
   }
@@ -228,9 +250,3 @@ async function runSimulation(
     setIsSubmitting(false);
   }
 }
-
-type SimulationFormState = FormState & {
-  dpe: NonNullable<FormState['dpe']>;
-  incomeCategory: NonNullable<FormState['incomeCategory']>;
-  selectedLocation: LocationSuggestion;
-};

@@ -15,26 +15,6 @@ type ResultsPageProps = {
 
 export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, onPrevious, onRestart }: ResultsPageProps) {
   return (
-    <SimulationResultContent
-      currentHeatingEquipment={currentHeatingEquipment}
-      isSubmitting={isSubmitting}
-      result={result}
-      onPrevious={onPrevious}
-      onRestart={onRestart}
-    />
-  );
-}
-
-type SimulationResultContentProps = {
-  currentHeatingEquipment: HeatingEquipment | null;
-  isSubmitting: boolean;
-  result: SimulationResult | null;
-  onPrevious: () => void;
-  onRestart: () => void;
-};
-
-function SimulationResultContent({ currentHeatingEquipment, isSubmitting, result, onPrevious, onRestart }: SimulationResultContentProps) {
-  return (
     <section className="step-content result-panel" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
       {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} />}
@@ -56,7 +36,6 @@ function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment:
   const estimatedAid = result.heatPumpMaprimerenovAid + result.heatPumpBoilerReplacementBonus;
   const boilerAverageAnnualBill = (result.gasBoilerAnnualBill + result.oilBoilerAnnualBill) / 2;
   const annualSavings = Math.max(boilerAverageAnnualBill - result.heatPumpAnnualBill, 0);
-  const fifteenYearSavings = annualSavings * 15 + BOILER_REPLACEMENT_PRICE - result.heatPumpNetPrice;
   const heatPumpComparison = result.heatingModeComparisons.find((comparison) => comparison.label === 'PAC air/eau');
   const boilerComparisonWithHighestCo2 = result.heatingModeComparisons
     .filter((comparison) => comparison.label !== 'PAC air/eau')
@@ -78,7 +57,6 @@ function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment:
       <FifteenYearComparison
         annualSavings={annualSavings}
         boilerAnnualBill={boilerAverageAnnualBill}
-        fifteenYearSavings={fifteenYearSavings}
         heatPumpAnnualBill={result.heatPumpAnnualBill}
         heatPumpNetPrice={result.heatPumpNetPrice}
       />
@@ -296,18 +274,11 @@ function AnnualBillsChart({ annualBillRows, maxAnnualBill }: { annualBillRows: A
 type FifteenYearComparisonProps = {
   annualSavings: number;
   boilerAnnualBill: number;
-  fifteenYearSavings: number;
   heatPumpAnnualBill: number;
   heatPumpNetPrice: number;
 };
 
-function FifteenYearComparison({
-  annualSavings,
-  boilerAnnualBill,
-  fifteenYearSavings,
-  heatPumpAnnualBill,
-  heatPumpNetPrice,
-}: FifteenYearComparisonProps) {
+function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnualBill, heatPumpNetPrice }: FifteenYearComparisonProps) {
   return (
     <section className="result-section" aria-labelledby="fifteen-year-title">
       <SectionHeading iconClassName="fr-icon-scales-3-line" title="PAC ou nouvelle chaudière : le coût sur 15 ans" />

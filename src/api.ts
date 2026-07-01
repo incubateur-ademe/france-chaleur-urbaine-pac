@@ -1,4 +1,4 @@
-import type { DpeInput, FormState, IncomeOption, LocationSuggestion, SimulationResult } from './types';
+import type { IncomeOption, LocationSuggestion, SimulationFormState, SimulationResult } from './types';
 
 const DEFAULT_API_BASE_URL = import.meta.env.VITE_FCU_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -13,12 +13,6 @@ type BanMunicipalityFeature = {
     label: string;
     postcode: string;
   };
-};
-
-type SimulationFormState = FormState & {
-  dpe: DpeInput;
-  incomeCategory: NonNullable<FormState['incomeCategory']>;
-  selectedLocation: LocationSuggestion;
 };
 
 export async function searchMunicipalities(location: string, signal: AbortSignal) {
@@ -39,7 +33,7 @@ export async function searchMunicipalities(location: string, signal: AbortSignal
 }
 
 export async function fetchIncomeOptions(selectedLocation: LocationSuggestion, occupants: number, signal: AbortSignal) {
-  const response = await postJson(
+  return postJson<IncomeOption[]>(
     `${DEFAULT_API_BASE_URL}/api/pac/income-options`,
     {
       departmentCode: selectedLocation.departmentCode,
@@ -47,23 +41,19 @@ export async function fetchIncomeOptions(selectedLocation: LocationSuggestion, o
     },
     signal
   );
-
-  return response.json() as Promise<IncomeOption[]>;
 }
 
 export async function fetchHeatingSimulation(formState: SimulationFormState) {
-  const response = await postJson(`${DEFAULT_API_BASE_URL}/api/pac/simulation`, {
+  return postJson<SimulationResult>(`${DEFAULT_API_BASE_URL}/api/pac/simulation`, {
     departmentCode: formState.selectedLocation.departmentCode,
     dpe: formState.dpe === 'unknown' ? 'D' : formState.dpe,
     incomeCategory: formState.incomeCategory,
     occupants: Number(formState.occupants),
     surface: Number(formState.surface),
   });
-
-  return response.json() as Promise<SimulationResult>;
 }
 
-async function postJson(url: string, body: unknown, signal?: AbortSignal) {
+async function postJson<TResponse>(url: string, body: unknown, signal?: AbortSignal) {
   const response = await fetch(url, {
     body: JSON.stringify(body),
     headers: {
@@ -77,7 +67,7 @@ async function postJson(url: string, body: unknown, signal?: AbortSignal) {
     throw new Error('API request failed');
   }
 
-  return response;
+  return response.json() as Promise<TResponse>;
 }
 
 function toLocationSuggestion(feature: BanMunicipalityFeature): LocationSuggestion {

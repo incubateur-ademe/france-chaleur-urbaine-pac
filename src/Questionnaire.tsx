@@ -1,181 +1,49 @@
-import type React from 'react';
 import { useEffect, useRef } from 'react';
 
 import {
-  DPE_VALUES,
-  type DpeInput,
+  type ChoiceStepConfig,
+  DPE_STEP_CONFIG,
+  HEATING_EQUIPMENT_LABELS,
+  HEATING_EQUIPMENT_STEP_CONFIG,
+  HOUSING_TYPE_LABELS,
+  HOUSING_TYPE_STEP_CONFIG,
+  OWNER_STATUS_LABELS,
+  OWNER_STATUS_STEP_CONFIG,
+  QUESTIONNAIRE_STEPS,
+  RECOMMENDATIONS,
+  TOTAL_STEPS,
+} from './constants';
+import {
   type FormState,
-  type HeatingEquipment,
-  type HousingType,
   INCOME_CATEGORY_VALUES,
   type IncomeOption,
   type LocationSuggestion,
-  type OwnerStatus,
   type QuestionnaireChoice,
   type RouteOutcome,
 } from './types';
 
-const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/';
-const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable';
-const RECOMMENDATIONS = {
-  apartment: {
-    ctaLabel: 'France Chaleur Urbaine',
-    description: (
-      <>
-        Mais pas de panique, rendez-vous sur le service public{' '}
-        <a href={FCU_URL} target="_blank" className="fr-link" rel="noopener">
-          France Chaleur Urbaine
-        </a>{' '}
-        pour découvrir le système de chauffage économique et écologique le plus adapté à votre bâtiment.
-      </>
-    ),
-    linkLabel: 'France Chaleur Urbaine',
-    title: 'Oups, ce simulateur est conçu pour les maisons individuelles !',
-    url: FCU_URL,
-  },
-  'electric-radiator': {
-    ctaLabel: 'sur Watt Watchers',
-    description: (
-      <>
-        Pas de panique, des solutions alternatives existent : pour les découvrir, rendez-vous sur{' '}
-        <a href={WATTWATCHERS_URL} className="fr-link" target="_blank" rel="noopener">
-          Watt Watchers
-        </a>
-      </>
-    ),
-    linkLabel: 'Watt Watchers',
-    title: 'Malheureusement, l’installation d’une PAC air/eau n’est pas recommandée dans votre maison.',
-    url: WATTWATCHERS_URL,
-  },
-  tenant: {
-    ctaLabel: 'Watt Watchers',
-    description: (
-      <>
-        Mais il existe de nombreuses autres solutions pour faire des économies énergies. Notre partenaire de confiance peut vous guider :
-        rendez-vous sur{' '}
-        <a href={WATTWATCHERS_URL} className="fr-link" target="_blank" rel="noopener">
-          Watt Watchers
-        </a>
-      </>
-    ),
-    linkLabel: 'Watt watchers',
-    title: "Oups, le remplacement d'une chaudière par une pompe à chaleur dépend de votre propriétaire !",
-    url: WATTWATCHERS_URL,
-  },
-} satisfies Record<
-  Exclude<RouteOutcome, 'continue'>,
-  {
-    ctaLabel: string;
-    description: React.ReactNode;
-    linkLabel: string;
-    title: string;
-    url: string;
-  }
->;
+const STEP_SUMMARY_GETTERS = [
+  getOwnerStatusSummary,
+  getHousingTypeSummary,
+  getHeatingEquipmentSummary,
+  getLocationStepSummary,
+  getDpeSummary,
+  getSurfaceSummary,
+  getOccupantsSummary,
+  getIncomeCategorySummary,
+] satisfies readonly ((formState: FormState) => string | null)[];
 
-const STEP_CONFIGS = [
-  {
-    kicker: 'Statut d’occupation',
-    title: "Statut d'occupation",
-  },
-  {
-    kicker: 'Type de logement',
-    title: 'Votre logement',
-  },
-  {
-    kicker: 'Chauffage actuel',
-    title: 'Votre mode de chauffage',
-  },
-  {
-    kicker: 'Code postal',
-    title: 'Votre code postal',
-  },
-  {
-    kicker: 'Classe Énergétique',
-    title: 'Votre DPE',
-  },
-  {
-    kicker: 'Surface chauffée',
-    title: 'Surface chauffée',
-  },
-  {
-    kicker: 'Composition du foyer',
-    title: 'Composition du foyer',
-  },
-  {
-    kicker: 'Revenus du foyer',
-    title: 'Votre situation',
-  },
-] as const;
-const TOTAL_STEPS = STEP_CONFIGS.length;
-type ChoiceStepConfig<TValue extends string> = {
-  legend: string;
-  hint?: string;
-  name: string;
-  options: readonly {
-    badgeClassName?: string;
-    fieldsetElementClassName?: string;
-    help?: string;
-    label: string;
-    value: TValue;
-  }[];
+const STEP_CONFIGS: readonly StepConfig[] = QUESTIONNAIRE_STEPS.map((stepConfig, stepIndex) => ({
+  ...stepConfig,
+  getSummaryValue: STEP_SUMMARY_GETTERS[stepIndex],
+}));
+
+type StepConfig = {
+  getSummaryValue: (formState: FormState) => string | null;
+  kicker: string;
+  shouldShowNextAction?: boolean;
+  title: string;
 };
-
-const OWNER_STATUS_STEP_CONFIG = {
-  legend: 'Êtes-vous propriétaire ?',
-  name: 'ownerStatus',
-  options: [
-    { label: 'Je suis propriétaire', value: 'owner' },
-    { label: 'Je suis locataire', value: 'tenant' },
-  ],
-} satisfies ChoiceStepConfig<OwnerStatus>;
-
-const OWNER_STATUS_LABELS = {
-  owner: 'Propriétaire',
-  tenant: 'Locataire',
-} satisfies Record<OwnerStatus, string>;
-
-const HOUSING_TYPE_STEP_CONFIG = {
-  legend: 'Votre logement est-il une maison ou un appartement ?',
-  name: 'housingType',
-  options: [
-    { label: 'Une maison individuelle', value: 'house' },
-    { label: 'Un appartement', value: 'apartment' },
-  ],
-} satisfies ChoiceStepConfig<HousingType>;
-
-const HOUSING_TYPE_LABELS = {
-  apartment: 'Appartement',
-  house: 'Maison individuelle',
-} satisfies Record<HousingType, string>;
-
-const HEATING_EQUIPMENT_STEP_CONFIG = {
-  legend: 'Comment votre logement est-il chauffé aujourd’hui ?',
-  name: 'heatingEquipment',
-  options: [
-    { label: 'Chaudière au gaz', value: 'gas-boiler' },
-    { label: 'Chaudière au fioul', value: 'oil-boiler' },
-    { label: 'Radiateur électrique', value: 'electric-radiator' },
-  ],
-} satisfies ChoiceStepConfig<HeatingEquipment>;
-
-const HEATING_EQUIPMENT_LABELS = {
-  'electric-radiator': 'Radiateur électrique',
-  'gas-boiler': 'Chaudière au gaz',
-  'oil-boiler': 'Chaudière au fioul',
-} satisfies Record<HeatingEquipment, string>;
-
-const DPE_STEP_CONFIG = {
-  hint: 'Vous avez un doute ? Choisissez la lettre qui vous semble la plus juste.',
-  legend: 'Quelle est la classe énergétique (DPE) du logement ?',
-  name: 'dpe',
-  options: DPE_VALUES.map((dpeValue) => ({
-    badgeClassName: dpeValue === 'unknown' ? undefined : `dpe-badge-${dpeValue.toLowerCase()}`,
-    fieldsetElementClassName: dpeValue === 'unknown' ? 'dpe-unknown-fieldset-element' : undefined,
-    label: dpeValue === 'unknown' ? 'Je ne sais pas (une étiquette D sera enregistrée)' : dpeValue,
-    value: dpeValue,
-  })),
-} satisfies ChoiceStepConfig<DpeInput>;
 
 type QuestionnaireProps = {
   currentStep: number;
@@ -255,10 +123,8 @@ export function Questionnaire({
               !isNextDisabled && (
                 <div className="fr-callout fr-callout--blue-cumulus">
                   <h3 className="fr-callout__title">Vos réponses sont complètes</h3>
-                  <p className="fr-callout__text">
-                    Nous avons tout ce qu'il faut pour estimer votre projet de pompe à chaleur.
-                    <StepActions nextLabel="Voir mes résultats" onHandleStep={onHandleStep} />
-                  </p>
+                  <p className="fr-callout__text">Nous avons tout ce qu'il faut pour estimer votre projet de pompe à chaleur.</p>
+                  <StepActions nextLabel="Voir mes résultats" onHandleStep={onHandleStep} />
                 </div>
               )
             ) : (
@@ -531,7 +397,6 @@ function ChoiceStep<TValue extends string>({ legend, hint, name, options, select
         {legend}
         {hint && <span className="fr-hint-text">{hint}</span>}
       </legend>
-
       {options.map((option) => (
         <div
           className={`fr-mb-0 fr-fieldset__element fr-fieldset__element--inline${option.fieldsetElementClassName ? ` ${option.fieldsetElementClassName}` : ''}`}
@@ -570,7 +435,7 @@ type StepActionsProps = {
 
 function StepActions({ isNextDisabled = false, nextLabel = 'Continuer', onHandleStep }: StepActionsProps) {
   return (
-    <div className="step-actions">
+    <div className="step-actions fr-mt-3v">
       <button
         className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
         disabled={isNextDisabled}
@@ -592,7 +457,13 @@ function RecommendationCallout({ outcome }: { outcome: Exclude<RouteOutcome, 'co
         <span className="fr-icon-info-fill fr-mr-3v" />
         {recommendation.title}
       </p>
-      <p className="fr-callout__text">{recommendation.description}</p>
+      <p className="fr-callout__text">
+        {recommendation.descriptionBeforeLink}{' '}
+        <a href={recommendation.url} className="fr-link" target="_blank" rel="noopener">
+          {recommendation.linkLabel}
+        </a>
+        {recommendation.descriptionAfterLink ? ` ${recommendation.descriptionAfterLink}` : ''}
+      </p>
       <a className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line" href={recommendation.url} target="_blank" rel="noreferrer">
         Aller sur {recommendation.ctaLabel}
       </a>
@@ -601,66 +472,54 @@ function RecommendationCallout({ outcome }: { outcome: Exclude<RouteOutcome, 'co
 }
 
 function getCompletedStepSummaries(formState: FormState, currentStep: number) {
-  const summaries: (CompletedStepSummary | null)[] = [
-    formState.ownerStatus
+  const summaries: (CompletedStepSummary | null)[] = STEP_CONFIGS.map((stepConfig, stepIndex) => {
+    const summaryValue = stepConfig.getSummaryValue(formState);
+    const step = stepIndex + 1;
+
+    return summaryValue
       ? {
-          label: STEP_CONFIGS[0].kicker,
-          step: 1,
-          value: OWNER_STATUS_LABELS[formState.ownerStatus],
+          label: stepConfig.kicker,
+          step,
+          value: summaryValue,
         }
-      : null,
-    formState.housingType
-      ? {
-          label: STEP_CONFIGS[1].kicker,
-          step: 2,
-          value: HOUSING_TYPE_LABELS[formState.housingType],
-        }
-      : null,
-    formState.heatingEquipment
-      ? {
-          label: STEP_CONFIGS[2].kicker,
-          step: 3,
-          value: HEATING_EQUIPMENT_LABELS[formState.heatingEquipment],
-        }
-      : null,
-    formState.selectedLocation
-      ? {
-          label: STEP_CONFIGS[3].kicker,
-          step: 4,
-          value: getLocationSummary(formState.selectedLocation),
-        }
-      : null,
-    formState.dpe
-      ? {
-          label: STEP_CONFIGS[4].kicker,
-          step: 5,
-          value: formState.dpe === 'unknown' ? 'Je ne sais pas' : formState.dpe,
-        }
-      : null,
-    isValidNumberInput(formState.surface, 1)
-      ? {
-          label: STEP_CONFIGS[5].kicker,
-          step: 6,
-          value: `${formState.surface} m²`,
-        }
-      : null,
-    isValidNumberInput(formState.occupants, 1)
-      ? {
-          label: STEP_CONFIGS[6].kicker,
-          step: 7,
-          value: formState.occupants,
-        }
-      : null,
-    formState.incomeCategory
-      ? {
-          label: STEP_CONFIGS[7].kicker,
-          step: 8,
-          value: formState.incomeCategory,
-        }
-      : null,
-  ];
+      : null;
+  });
 
   return summaries.filter((summary): summary is CompletedStepSummary => summary !== null && summary.step < currentStep);
+}
+
+function getOwnerStatusSummary(formState: FormState) {
+  return formState.ownerStatus ? OWNER_STATUS_LABELS[formState.ownerStatus] : null;
+}
+
+function getHousingTypeSummary(formState: FormState) {
+  return formState.housingType ? HOUSING_TYPE_LABELS[formState.housingType] : null;
+}
+
+function getHeatingEquipmentSummary(formState: FormState) {
+  return formState.heatingEquipment ? HEATING_EQUIPMENT_LABELS[formState.heatingEquipment] : null;
+}
+
+function getLocationStepSummary(formState: FormState) {
+  return formState.selectedLocation ? getLocationSummary(formState.selectedLocation) : null;
+}
+
+function getDpeSummary(formState: FormState) {
+  return formState.dpe ? (formState.dpe === 'unknown' ? 'Je ne sais pas (D)' : `Classe ${formState.dpe}`) : null;
+}
+
+function getSurfaceSummary(formState: FormState) {
+  return isValidNumberInput(formState.surface, 1) ? `${formState.surface} m²` : null;
+}
+
+function getOccupantsSummary(formState: FormState) {
+  if (!isValidNumberInput(formState.occupants, 1)) return null;
+  const occupantsNumber = Number(formState.occupants);
+  return `${formState.occupants} personne${occupantsNumber > 1 ? 's' : ''}`;
+}
+
+function getIncomeCategorySummary(formState: FormState) {
+  return formState.incomeCategory;
 }
 
 function getLocationSummary(selectedLocation: LocationSuggestion) {
@@ -668,7 +527,7 @@ function getLocationSummary(selectedLocation: LocationSuggestion) {
 }
 
 function getShouldShowNextAction(currentStep: number) {
-  return currentStep === 4 || currentStep === 6 || currentStep === 7 || currentStep === TOTAL_STEPS;
+  return STEP_CONFIGS[currentStep - 1]?.shouldShowNextAction === true;
 }
 
 function getRecommendationOutcome(currentStep: number, routeOutcome: RouteOutcome) {
@@ -694,35 +553,9 @@ function getFallbackIncomeOptions() {
 }
 
 function getIsNextDisabled(currentStep: number, formState: FormState) {
-  if (currentStep === 1) {
-    return formState.ownerStatus === null;
-  }
+  const stepConfig = STEP_CONFIGS[currentStep - 1];
 
-  if (currentStep === 2) {
-    return formState.housingType === null;
-  }
-
-  if (currentStep === 3) {
-    return formState.heatingEquipment === null;
-  }
-
-  if (currentStep === 4) {
-    return formState.selectedLocation === null;
-  }
-
-  if (currentStep === 5) {
-    return formState.dpe === null;
-  }
-
-  if (currentStep === 6) {
-    return !isValidNumberInput(formState.surface, 1);
-  }
-
-  if (currentStep === 7) {
-    return !isValidNumberInput(formState.occupants, 1);
-  }
-
-  return formState.incomeCategory === null;
+  return stepConfig ? stepConfig.getSummaryValue(formState) === null : true;
 }
 
 function isValidNumberInput(value: string, min: number) {

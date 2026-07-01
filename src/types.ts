@@ -60,3 +60,9 @@ export type FormState = {
   selectedLocation: LocationSuggestion | null;
   surface: string;
 };
+
+export type SimulationFormState = FormState & {
+  dpe: NonNullable<FormState['dpe']>;
+  incomeCategory: NonNullable<FormState['incomeCategory']>;
+  selectedLocation: LocationSuggestion;
+};

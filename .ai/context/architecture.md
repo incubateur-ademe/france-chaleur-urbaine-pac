@@ -10,6 +10,8 @@ This repository is a small frontend prototype. It has no server runtime, databas
 |------|----------|---------|
 | App shell | `src/App.tsx` | Journey state, API calls, URL synchronization and high-level composition |
 | Questionnaire | `src/Questionnaire.tsx` | Steps 1 to 8 and their form controls |
+| Questionnaire constants | `src/constants.ts` | Static questionnaire labels, choices, recommendations and step metadata |
+| Questionnaire journey | `src/questionnaire.ts` | Journey state initialization, URL synchronization and route outcome helpers |
 | Results page | `src/ResultsPage.tsx` | Recommendations and simulation result presentation |
 | Shared contracts | `src/types.ts` | Domain values and types shared across the journey components |
 | Entry point | `src/main.tsx` | DSFR startup, CSS imports, React mounting |

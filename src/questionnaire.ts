@@ -9,7 +9,6 @@ import {
   type RouteOutcome,
 } from './types';
 
-export const INTRO_STEP = 0;
 export const RESULT_STEP = 9;
 
 export const INITIAL_FORM_STATE = {
@@ -49,33 +48,23 @@ export function getInitialJourneyState() {
 export function getSearchParams(formState: FormState, currentStep: number) {
   const searchParams = new URLSearchParams();
 
-  if (currentStep === INTRO_STEP) {
+  if (currentStep === 0) {
     return searchParams;
   }
 
   searchParams.set('step', String(currentStep));
 
-  setOptionalSearchParam(searchParams, 'situation', formState.ownerStatus);
-  setOptionalSearchParam(searchParams, 'housing', formState.housingType);
-  setOptionalSearchParam(searchParams, 'equipment', formState.heatingEquipment);
-  setOptionalSearchParam(searchParams, 'location', formState.location);
-  setOptionalSearchParam(searchParams, 'dpe', formState.dpe);
-  setChangedSearchParam(searchParams, 'occupants', formState.occupants, INITIAL_FORM_STATE.occupants);
-  setChangedSearchParam(searchParams, 'surface', formState.surface, INITIAL_FORM_STATE.surface);
-  setOptionalSearchParam(searchParams, 'incomeCategory', formState.incomeCategory);
-
-  if (formState.selectedLocation) {
-    searchParams.set('city', formState.selectedLocation.city);
-    searchParams.set('postcode', formState.selectedLocation.postcode);
-  }
+  setSearchParam(searchParams, 'situation', formState.ownerStatus);
+  setSearchParam(searchParams, 'housing', formState.housingType);
+  setSearchParam(searchParams, 'equipment', formState.heatingEquipment);
+  setSearchParam(searchParams, 'location', formState.location);
+  setSearchParam(searchParams, 'dpe', formState.dpe);
+  setSearchParam(searchParams, 'occupants', formState.occupants);
+  setSearchParam(searchParams, 'surface', formState.surface);
+  setSearchParam(searchParams, 'incomeCategory', formState.incomeCategory);
+  setSearchParam(searchParams, 'postcode', formState.selectedLocation?.postcode || null);
 
   return searchParams;
-}
-
-export function getUrlWithSearchParams(searchParams: URLSearchParams) {
-  const serializedSearchParams = searchParams.toString();
-
-  return serializedSearchParams ? `${window.location.pathname}?${serializedSearchParams}` : window.location.pathname;
 }
 
 export function getRouteOutcome(formState: FormState): RouteOutcome {
@@ -133,7 +122,7 @@ function getInitialStep(searchParams: URLSearchParams, formState: FormState) {
   const fallbackStep = getLastAvailableStep(formState);
 
   if (!searchParams.has('step')) {
-    return INTRO_STEP;
+    return 0;
   }
 
   if (!Number.isFinite(requestedStep)) {
@@ -185,16 +174,8 @@ function getLastAvailableStep(formState: FormState) {
   return RESULT_STEP;
 }
 
-function setOptionalSearchParam(searchParams: URLSearchParams, key: string, value: string | null) {
+function setSearchParam(searchParams: URLSearchParams, key: string, value: string | null) {
   if (!value) {
-    return;
-  }
-
-  searchParams.set(key, value);
-}
-
-function setChangedSearchParam(searchParams: URLSearchParams, key: string, value: string, defaultValue: string) {
-  if (value === defaultValue) {
     return;
   }
 
