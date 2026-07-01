@@ -1,6 +1,5 @@
 import {
   DPE_VALUES,
-  type DpeInput,
   type FormState,
   HEATING_EQUIPMENT_VALUES,
   HOUSING_TYPE_VALUES,
@@ -113,10 +112,6 @@ export function getPreviousStep(currentStep: number, formState: FormState) {
   return Math.max(currentStep - 1, 1);
 }
 
-export function getSimulationDpe(dpe: DpeInput) {
-  return dpe === 'unknown' ? 'D' : dpe;
-}
-
 function getInitialSelectedLocation(searchParams: URLSearchParams) {
   const label = searchParams.get('location') ?? searchParams.get('address');
   const postcode = searchParams.get('postcode');
@@ -127,7 +122,7 @@ function getInitialSelectedLocation(searchParams: URLSearchParams) {
 
   return {
     city: searchParams.get('city') ?? '',
-    departmentCode: getDepartmentCode(postcode),
+    departmentCode: postcode.slice(0, 2),
     label,
     postcode,
   } satisfies LocationSuggestion;
@@ -151,12 +146,12 @@ function getInitialStep(searchParams: URLSearchParams, formState: FormState) {
 function getLastAvailableStep(formState: FormState) {
   const routeOutcome = getRouteOutcome(formState);
 
-  if (routeOutcome === 'apartment') {
-    return 2;
-  }
-
   if (routeOutcome === 'tenant') {
     return 1;
+  }
+
+  if (routeOutcome === 'apartment') {
+    return 2;
   }
 
   if (routeOutcome === 'electric-radiator') {
@@ -210,8 +205,4 @@ function getSearchParamValue<TValue extends string>(searchParams: URLSearchParam
   const value = searchParams.get(key);
 
   return values.find((allowedValue) => allowedValue === value) ?? null;
-}
-
-export function getDepartmentCode(postcode: string) {
-  return postcode.slice(0, 2);
 }

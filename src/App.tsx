@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { fetchHeatingSimulation, fetchIncomeOptions, searchMunicipalities } from './api';
+import { HomeScreen } from './HomeScreen';
 import {
   getInitialJourneyState,
   getPreviousStep,
@@ -15,38 +16,6 @@ import { Questionnaire } from './Questionnaire';
 import { ResultsPage } from './ResultsPage';
 import type { FormState, IncomeOption, LocationSuggestion, QuestionnaireChoice, SimulationResult } from './types';
 
-export const HOME_FEATURES = [
-  {
-    description: (
-      <>
-        <strong>Les informations présentées sont des estimations</strong> et peuvent varier en fonction des caractéristiques des logement et
-        des équipements.
-      </>
-    ),
-    iconClassName: 'fr-icon-pie-chart-box-fill',
-    title: 'Estimation',
-  },
-  {
-    description: (
-      <>
-        Les aides estimées dans les calculs impliquent le <strong>remplacement de la chaudière gaz ou fioul</strong>.
-      </>
-    ),
-    iconClassName: 'fr-icon-money-euro-box-fill',
-    title: 'Aides incluses',
-  },
-  {
-    description: <>Les calculs sont simplifiés et ne remplacent pas un devis par un professionnel RGE.</>,
-    iconClassName: 'fr-icon-line-chart-fill',
-    title: 'Calculs simplifiés',
-  },
-  {
-    description: <>Il est nécessaire d’en parler à un professionnel pour vous faire accompagner en toute neutralité.</>,
-    iconClassName: 'fr-icon-chat-3-fill',
-    title: 'Faites-vous accompagner',
-  },
-] as const;
-
 export function App() {
   const initialState = useMemo(() => getInitialJourneyState(), []);
   const [currentStep, setCurrentStep] = useState(initialState.currentStep);
@@ -56,7 +25,6 @@ export function App() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [isIncomeOptionsLoading, setIsIncomeOptionsLoading] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const occupants = Number(formState.occupants);
@@ -68,7 +36,6 @@ export function App() {
   }, [currentStep, formState]);
 
   useEffect(() => {
-    setErrorMessage(null);
     if (formState.location.length < 3 || formState.selectedLocation?.label === formState.location) {
       setLocationSuggestions([]);
       setIsLocationLoading(false);
@@ -86,7 +53,6 @@ export function App() {
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
-        setErrorMessage('La recherche de commune est momentanément indisponible.');
       })
       .finally(() => {
         if (!abortController.signal.aborted) {
@@ -106,7 +72,6 @@ export function App() {
 
     const abortController = new AbortController();
     setIsIncomeOptionsLoading(true);
-    setErrorMessage(null);
 
     fetchIncomeOptions(formState.selectedLocation, occupants, abortController.signal)
       .then((options) => {
@@ -117,7 +82,6 @@ export function App() {
           return;
         }
         setIncomeOptions([]);
-        setErrorMessage('Les catégories de revenus sont momentanément indisponibles.');
       })
       .finally(() => {
         if (!abortController.signal.aborted) {
@@ -129,12 +93,12 @@ export function App() {
   }, [formState.selectedLocation, occupants]);
 
   useEffect(() => {
-    if (currentStep !== RESULT_STEP || routeOutcome !== 'continue' || result || errorMessage || isSubmitting) {
+    if (currentStep !== RESULT_STEP || routeOutcome !== 'continue' || result || isSubmitting) {
       return;
     }
 
-    void runSimulation(formState, setResult, setErrorMessage, setIsSubmitting);
-  }, [currentStep, errorMessage, formState, isSubmitting, result, routeOutcome]);
+    runSimulation(formState, setResult, setIsSubmitting);
+  }, [currentStep, formState, isSubmitting, result, routeOutcome]);
 
   const handleChoiceChange = (changes: Partial<FormState>, nextStep: number) => {
     setResult(null);
@@ -176,13 +140,11 @@ export function App() {
 
   const handleStep = (action: 'previous' | 'next') => {
     setResult(null);
-    setErrorMessage(null);
     setCurrentStep(action === 'previous' ? getPreviousStep(currentStep, formState) : Math.min(currentStep + 1, RESULT_STEP));
   };
 
   const handleEditStep = (step: number) => {
     setResult(null);
-    setErrorMessage(null);
     setCurrentStep(step);
   };
 
@@ -192,7 +154,6 @@ export function App() {
     setLocationSuggestions([]);
     setIncomeOptions([]);
     setResult(null);
-    setErrorMessage(null);
   };
 
   const handleBack = () => {
@@ -216,18 +177,15 @@ export function App() {
         {currentStep === RESULT_STEP && (
           <ResultsPage
             currentHeatingEquipment={formState.heatingEquipment}
-            errorMessage={errorMessage}
             isSubmitting={isSubmitting}
             result={result}
             onPrevious={() => handleStep('previous')}
             onRestart={handleRestart}
-            onRetry={() => void runSimulation(formState, setResult, setErrorMessage, setIsSubmitting)}
           />
         )}
         {currentStep > INTRO_STEP && currentStep < RESULT_STEP && (
           <Questionnaire
             currentStep={currentStep}
-            errorMessage={errorMessage}
             formState={formState}
             incomeOptions={incomeOptions}
             isIncomeOptionsLoading={isIncomeOptionsLoading}
@@ -247,51 +205,17 @@ export function App() {
   );
 }
 
-function HomeScreen({ onStart }: { onStart: () => void }) {
-  return (
-    <section aria-labelledby="home-title">
-      <p className="fr-badge fr-badge--info fr-badge--no-icon fr-py-1v">
-        <span className="fr-icon-time-fill fr-mr-1v" aria-hidden="true" />
-        Moins d’une minute
-      </p>
-      <div className="fr-grid-row fr-mt-5v">
-        {HOME_FEATURES.slice(0, 3).map((feature) => (
-          <article className="fr-col-12 fr-col-lg-4 fr-p-3w fr-grid-row home-feature" key={feature.title}>
-            <div className="fr-col-auto">
-              <span className={`${feature.iconClassName} fr-icon--lg`} aria-hidden="true" />
-            </div>
-            <div className="fr-col fr-pl-3v">
-              <h2 className="fr-h4">{feature.title}</h2>
-              <p className="fr-mb-0">{feature.description}</p>
-            </div>
-          </article>
-        ))}
-      </div>
-      <button className="fr-my-6v fr-btn fr-btn--icon-right fr-icon-arrow-right-line" type="button" onClick={onStart}>
-        Démarrer la simulation
-      </button>
-      <p className="fr-mt-3v">
-        Vous pouvez accéder à un simulateur plus détaillé sur{' '}
-        <a href="https://france-chaleur-urbaine.beta.gouv.fr/" className="fr-link" target="_blank" rel="noreferrer">
-          France Chaleur Urbaine
-        </a>
-        .
-      </p>
-    </section>
-  );
-}
-
 async function runSimulation(
   formState: FormState,
   setResult: (result: SimulationResult | null) => void,
-  setErrorMessage: (errorMessage: string | null) => void,
   setIsSubmitting: (isSubmitting: boolean) => void
 ) {
   setResult(null);
-  setErrorMessage(null);
 
+  function isSimulationReady(formState: FormState): formState is SimulationFormState {
+    return formState.selectedLocation !== null && formState.dpe !== null && formState.incomeCategory !== null;
+  }
   if (!isSimulationReady(formState)) {
-    setErrorMessage('Complétez toutes les informations avant de lancer le calcul.');
     return;
   }
 
@@ -300,7 +224,6 @@ async function runSimulation(
   try {
     setResult(await fetchHeatingSimulation(formState));
   } catch {
-    setErrorMessage('Le calcul est momentanément indisponible.');
   } finally {
     setIsSubmitting(false);
   }
@@ -311,7 +234,3 @@ type SimulationFormState = FormState & {
   incomeCategory: NonNullable<FormState['incomeCategory']>;
   selectedLocation: LocationSuggestion;
 };
-
-function isSimulationReady(formState: FormState): formState is SimulationFormState {
-  return formState.selectedLocation !== null && formState.dpe !== null && formState.incomeCategory !== null;
-}

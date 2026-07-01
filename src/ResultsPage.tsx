@@ -1,4 +1,4 @@
-import { HOME_FEATURES } from '@/App';
+import { HOME_FEATURES } from '@/HomeScreen';
 import { Stepper } from '@/Questionnaire';
 
 import type { HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
@@ -7,69 +7,36 @@ const BOILER_REPLACEMENT_PRICE = 5000;
 
 type ResultsPageProps = {
   currentHeatingEquipment: HeatingEquipment | null;
-  errorMessage: string | null;
   isSubmitting: boolean;
   result: SimulationResult | null;
   onPrevious: () => void;
   onRestart: () => void;
-  onRetry: () => void;
 };
 
-/**
- * Displays the detailed PAC comparison report at the end of the simulator journey.
- */
-export function ResultsPage({
-  currentHeatingEquipment,
-  errorMessage,
-  isSubmitting,
-  result,
-  onPrevious,
-  onRestart,
-  onRetry,
-}: ResultsPageProps) {
+export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, onPrevious, onRestart }: ResultsPageProps) {
   return (
     <SimulationResultContent
       currentHeatingEquipment={currentHeatingEquipment}
-      errorMessage={errorMessage}
       isSubmitting={isSubmitting}
       result={result}
       onPrevious={onPrevious}
       onRestart={onRestart}
-      onRetry={onRetry}
     />
   );
 }
 
 type SimulationResultContentProps = {
   currentHeatingEquipment: HeatingEquipment | null;
-  errorMessage: string | null;
   isSubmitting: boolean;
   result: SimulationResult | null;
   onPrevious: () => void;
   onRestart: () => void;
-  onRetry: () => void;
 };
 
-/**
- * Handles loading, error and success states for the simulation result page.
- */
-function SimulationResultContent({
-  currentHeatingEquipment,
-  errorMessage,
-  isSubmitting,
-  result,
-  onPrevious,
-  onRestart,
-  onRetry,
-}: SimulationResultContentProps) {
+function SimulationResultContent({ currentHeatingEquipment, isSubmitting, result, onPrevious, onRestart }: SimulationResultContentProps) {
   return (
     <section className="step-content result-panel" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
-      {errorMessage && (
-        <div className="fr-alert fr-alert--error">
-          <p>{errorMessage}</p>
-        </div>
-      )}
       {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} />}
       <div className="step-actions">
         <button className="fr-btn fr-btn--secondary" type="button" onClick={onPrevious}>
@@ -78,25 +45,12 @@ function SimulationResultContent({
         <button className="fr-btn fr-btn--tertiary" type="button" onClick={onRestart}>
           Recommencer
         </button>
-        {errorMessage && (
-          <button className="fr-btn" disabled={isSubmitting} type="button" onClick={onRetry}>
-            Relancer le calcul
-          </button>
-        )}
       </div>
     </section>
   );
 }
 
-type ResultsProps = {
-  currentHeatingEquipment: HeatingEquipment | null;
-  result: SimulationResult;
-};
-
-/**
- * Presents the PAC result as a decision report with costs, energy and aid details.
- */
-function Results({ currentHeatingEquipment, result }: ResultsProps) {
+function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment: HeatingEquipment | null; result: SimulationResult }) {
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
   const maxAnnualBill = Math.max(...annualBillRows.map((annualBillRow) => annualBillRow.amount), 1);
   const estimatedAid = result.heatPumpMaprimerenovAid + result.heatPumpBoilerReplacementBonus;
@@ -134,16 +88,7 @@ function Results({ currentHeatingEquipment, result }: ResultsProps) {
   );
 }
 
-type ResultSummaryGridProps = {
-  annualSavings: number;
-  avoidedCo2: number;
-  result: SimulationResult;
-};
-
-/**
- * Shows the four headline indicators used to qualify the recommendation.
- */
-function ResultSummaryGrid({ annualSavings, avoidedCo2, result }: ResultSummaryGridProps) {
+function ResultSummaryGrid({ annualSavings, avoidedCo2, result }: { annualSavings: number; avoidedCo2: number; result: SimulationResult }) {
   return (
     <div className="summary-grid">
       <SummaryCard
@@ -183,9 +128,6 @@ type SummaryCardProps = {
   variant: 'co2' | 'power' | 'primary' | 'saving';
 };
 
-/**
- * Displays one headline metric in the result summary grid.
- */
 function SummaryCard({ description, label, suffix, value, variant }: SummaryCardProps) {
   return (
     <article className={`summary-card summary-card-${variant}`}>
@@ -202,9 +144,6 @@ function SummaryCard({ description, label, suffix, value, variant }: SummaryCard
   );
 }
 
-/**
- * Renders custom pictograms matching the result design reference.
- */
 function getSummaryCardIcon(variant: SummaryCardProps['variant']) {
   if (variant === 'co2') {
     return <SummaryCardPictogram href="/artwork/pictograms/environment/leaf.svg" />;
@@ -217,14 +156,7 @@ function getSummaryCardIcon(variant: SummaryCardProps['variant']) {
   return null;
 }
 
-type SummaryCardPictogramProps = {
-  href: string;
-};
-
-/**
- * Displays a local DSFR pictogram with its decorative, minor and major layers.
- */
-function SummaryCardPictogram({ href }: SummaryCardPictogramProps) {
+function SummaryCardPictogram({ href }: { href: string }) {
   return (
     <svg className="fr-artwork summary-card-picto" aria-hidden="true" viewBox="0 0 80 80">
       <use className="fr-artwork-decorative" href={`${href}#artwork-decorative`} />
@@ -234,9 +166,6 @@ function SummaryCardPictogram({ href }: SummaryCardPictogramProps) {
   );
 }
 
-/**
- * Promotes the France Rénov' advisory service between result sections.
- */
 function AdvisorCallout() {
   return (
     <aside className="advisor-callout" aria-label="Accompagnement France Rénov’">
@@ -254,14 +183,7 @@ function AdvisorCallout() {
   );
 }
 
-type CostAndAidDetailsProps = {
-  result: SimulationResult;
-};
-
-/**
- * Details the installation price, aid estimates and remaining household cost.
- */
-function CostAndAidDetails({ result }: CostAndAidDetailsProps) {
+function CostAndAidDetails({ result }: { result: SimulationResult }) {
   const costRows = [
     {
       label: "Prix moyen d'une PAC air/eau (coût d'installation)",
@@ -328,15 +250,7 @@ type AnnualBillRow = {
   label: string;
 };
 
-type AnnualBillsChartProps = {
-  annualBillRows: AnnualBillRow[];
-  maxAnnualBill: number;
-};
-
-/**
- * Compares yearly energy bills for the current boiler options and a PAC.
- */
-function AnnualBillsChart({ annualBillRows, maxAnnualBill }: AnnualBillsChartProps) {
+function AnnualBillsChart({ annualBillRows, maxAnnualBill }: { annualBillRows: AnnualBillRow[]; maxAnnualBill: number }) {
   return (
     <section className="result-section annual-bills" aria-labelledby="annual-bills-title">
       <div className="annual-bills-heading">
@@ -387,9 +301,6 @@ type FifteenYearComparisonProps = {
   heatPumpNetPrice: number;
 };
 
-/**
- * Projects the installation choice over fifteen years, including installation cost.
- */
 function FifteenYearComparison({
   annualSavings,
   boilerAnnualBill,

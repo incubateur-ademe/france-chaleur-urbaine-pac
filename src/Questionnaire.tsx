@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useEffect, useRef } from 'react';
 
 import {
   DPE_VALUES,
@@ -14,12 +15,11 @@ import {
   type RouteOutcome,
 } from './types';
 
-const TOTAL_STEPS = 8;
 const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/';
 const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable';
 const RECOMMENDATIONS = {
   apartment: {
-    ctaLabel: 'Découvrir la chaleur renouvelable',
+    ctaLabel: 'France Chaleur Urbaine',
     description: (
       <>
         Mais pas de panique, rendez-vous sur le service public{' '}
@@ -73,27 +73,41 @@ const RECOMMENDATIONS = {
   }
 >;
 
-const STEP_TITLES = [
-  "Statut d'occupation",
-  'Votre logement',
-  'Votre mode de chauffage',
-  'Votre code postal',
-  'Votre DPE',
-  'Surface chauffée',
-  'Composition du foyer',
-  'Votre situation',
+const STEP_CONFIGS = [
+  {
+    kicker: 'Statut d’occupation',
+    title: "Statut d'occupation",
+  },
+  {
+    kicker: 'Type de logement',
+    title: 'Votre logement',
+  },
+  {
+    kicker: 'Chauffage actuel',
+    title: 'Votre mode de chauffage',
+  },
+  {
+    kicker: 'Code postal',
+    title: 'Votre code postal',
+  },
+  {
+    kicker: 'Classe Énergétique',
+    title: 'Votre DPE',
+  },
+  {
+    kicker: 'Surface chauffée',
+    title: 'Surface chauffée',
+  },
+  {
+    kicker: 'Composition du foyer',
+    title: 'Composition du foyer',
+  },
+  {
+    kicker: 'Revenus du foyer',
+    title: 'Votre situation',
+  },
 ] as const;
-
-const STEP_KICKERS = [
-  'Statut d’occupation',
-  'Type de logement',
-  'Chauffage actuel',
-  'Code postal',
-  'Classe Énergétique',
-  'Surface chauffée',
-  'Composition du foyer',
-  'Revenus du foyer',
-] as const;
+const TOTAL_STEPS = STEP_CONFIGS.length;
 type ChoiceStepConfig<TValue extends string> = {
   legend: string;
   hint?: string;
@@ -165,7 +179,6 @@ const DPE_STEP_CONFIG = {
 
 type QuestionnaireProps = {
   currentStep: number;
-  errorMessage: string | null;
   formState: FormState;
   incomeOptions: IncomeOption[];
   isIncomeOptionsLoading: boolean;
@@ -182,7 +195,6 @@ type QuestionnaireProps = {
 
 export function Questionnaire({
   currentStep,
-  errorMessage,
   formState,
   incomeOptions,
   isIncomeOptionsLoading,
@@ -196,10 +208,19 @@ export function Questionnaire({
   onLocationChange,
   onLocationSelect,
 }: QuestionnaireProps) {
+  const activeQuestionRef = useRef<HTMLElement>(null);
   const displayedIncomeOptions = incomeOptions.length > 0 ? incomeOptions : getFallbackIncomeOptions();
   const isNextDisabled = getIsNextDisabled(currentStep, formState);
   const recommendationOutcome = getRecommendationOutcome(currentStep, routeOutcome);
   const completedStepSummaries = getCompletedStepSummaries(formState, currentStep);
+
+  useEffect(() => {
+    if (currentStep < 1 || currentStep > TOTAL_STEPS) {
+      return;
+    }
+
+    activeQuestionRef.current?.scrollIntoView({ block: 'start' });
+  }, [currentStep]);
 
   return (
     <>
@@ -208,12 +229,12 @@ export function Questionnaire({
         {completedStepSummaries.map((summary) => (
           <CompletedStepCard key={summary.step} summary={summary} onEditStep={onEditStep} />
         ))}
-        <section className="question-card fr-p-5v" aria-labelledby="active-question-title">
+        <section ref={activeQuestionRef} className="question-card active-question-card fr-p-5v" aria-labelledby="active-question-title">
           <h2 className="fr-sr-only" id="active-question-title">
-            {STEP_TITLES[currentStep - 1]}
+            {STEP_CONFIGS[currentStep - 1].title}
           </h2>
           <p className="fr-text-title--blue-france uppercase">
-            {STEP_TITLES[currentStep - 1]} - QUESTION {currentStep}/{TOTAL_STEPS}
+            {STEP_CONFIGS[currentStep - 1].title} - QUESTION {currentStep}/{TOTAL_STEPS}
           </p>
           {renderActiveStep({
             currentStep,
@@ -228,31 +249,34 @@ export function Questionnaire({
             onLocationSelect,
           })}
           {recommendationOutcome && <RecommendationCallout outcome={recommendationOutcome} />}
-          {!recommendationOutcome && getShouldShowNextAction(currentStep) && (
-            <StepActions
-              isNextDisabled={isNextDisabled}
-              nextLabel={currentStep === 8 ? 'Voir le résultat' : 'Continuer'}
-              onHandleStep={onHandleStep}
-            />
-          )}
+          {!recommendationOutcome &&
+            getShouldShowNextAction(currentStep) &&
+            (currentStep === TOTAL_STEPS ? (
+              !isNextDisabled && (
+                <div className="fr-callout fr-callout--blue-cumulus">
+                  <h3 className="fr-callout__title">Vos réponses sont complètes</h3>
+                  <p className="fr-callout__text">
+                    Nous avons tout ce qu'il faut pour estimer votre projet de pompe à chaleur.
+                    <StepActions nextLabel="Voir mes résultats" onHandleStep={onHandleStep} />
+                  </p>
+                </div>
+              )
+            ) : (
+              <StepActions isNextDisabled={isNextDisabled} nextLabel="Continuer" onHandleStep={onHandleStep} />
+            ))}
         </section>
       </div>
-      {errorMessage && (
-        <div className="fr-alert fr-alert--error fr-mt-4w">
-          <p>{errorMessage}</p>
-        </div>
-      )}
     </>
   );
 }
 
 export function Stepper({ currentStep }: { currentStep: number }) {
-  const nextStepTitle = STEP_KICKERS[currentStep];
+  const nextStepTitle = STEP_CONFIGS[currentStep]?.kicker;
 
   return (
     <div className="fr-stepper">
-      <h2 className="fr-stepper__title" id="step-title">
-        {currentStep === 8 ? (
+      <h2 className="fr-stepper__title">
+        {currentStep === TOTAL_STEPS ? (
           <span>Vos résultats</span>
         ) : (
           <span className="fr-stepper__state">
@@ -559,15 +583,11 @@ function StepActions({ isNextDisabled = false, nextLabel = 'Continuer', onHandle
   );
 }
 
-type RecommendationCalloutProps = {
-  outcome: Exclude<RouteOutcome, 'continue'>;
-};
-
-function RecommendationCallout({ outcome }: RecommendationCalloutProps) {
+function RecommendationCallout({ outcome }: { outcome: Exclude<RouteOutcome, 'continue'> }) {
   const recommendation = RECOMMENDATIONS[outcome];
 
   return (
-    <div className="fr-callout  fr-callout--blue-cumulus">
+    <div className="fr-callout fr-callout--blue-cumulus">
       <p className="fr-text--lg fr-text--bold fr-text-title--blue-france fr-mb-3v">
         <span className="fr-icon-info-fill fr-mr-3v" />
         {recommendation.title}
@@ -584,56 +604,56 @@ function getCompletedStepSummaries(formState: FormState, currentStep: number) {
   const summaries: (CompletedStepSummary | null)[] = [
     formState.ownerStatus
       ? {
-          label: STEP_KICKERS[0],
+          label: STEP_CONFIGS[0].kicker,
           step: 1,
           value: OWNER_STATUS_LABELS[formState.ownerStatus],
         }
       : null,
     formState.housingType
       ? {
-          label: STEP_KICKERS[1],
+          label: STEP_CONFIGS[1].kicker,
           step: 2,
           value: HOUSING_TYPE_LABELS[formState.housingType],
         }
       : null,
     formState.heatingEquipment
       ? {
-          label: STEP_KICKERS[2],
+          label: STEP_CONFIGS[2].kicker,
           step: 3,
           value: HEATING_EQUIPMENT_LABELS[formState.heatingEquipment],
         }
       : null,
     formState.selectedLocation
       ? {
-          label: STEP_KICKERS[3],
+          label: STEP_CONFIGS[3].kicker,
           step: 4,
           value: getLocationSummary(formState.selectedLocation),
         }
       : null,
     formState.dpe
       ? {
-          label: STEP_KICKERS[4],
+          label: STEP_CONFIGS[4].kicker,
           step: 5,
           value: formState.dpe === 'unknown' ? 'Je ne sais pas' : formState.dpe,
         }
       : null,
     isValidNumberInput(formState.surface, 1)
       ? {
-          label: STEP_KICKERS[5],
+          label: STEP_CONFIGS[5].kicker,
           step: 6,
           value: `${formState.surface} m²`,
         }
       : null,
     isValidNumberInput(formState.occupants, 1)
       ? {
-          label: STEP_KICKERS[6],
+          label: STEP_CONFIGS[6].kicker,
           step: 7,
           value: formState.occupants,
         }
       : null,
     formState.incomeCategory
       ? {
-          label: STEP_KICKERS[7],
+          label: STEP_CONFIGS[7].kicker,
           step: 8,
           value: formState.incomeCategory,
         }
@@ -648,7 +668,7 @@ function getLocationSummary(selectedLocation: LocationSuggestion) {
 }
 
 function getShouldShowNextAction(currentStep: number) {
-  return currentStep === 4 || currentStep === 6 || currentStep === 7 || currentStep === 8;
+  return currentStep === 4 || currentStep === 6 || currentStep === 7 || currentStep === TOTAL_STEPS;
 }
 
 function getRecommendationOutcome(currentStep: number, routeOutcome: RouteOutcome) {

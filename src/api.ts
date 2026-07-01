@@ -1,4 +1,3 @@
-import { getDepartmentCode, getSimulationDpe } from './journey';
 import type { DpeInput, FormState, IncomeOption, LocationSuggestion, SimulationResult } from './types';
 
 const DEFAULT_API_BASE_URL = import.meta.env.VITE_FCU_API_BASE_URL ?? 'http://localhost:3000';
@@ -55,7 +54,7 @@ export async function fetchIncomeOptions(selectedLocation: LocationSuggestion, o
 export async function fetchHeatingSimulation(formState: SimulationFormState) {
   const response = await postJson(`${DEFAULT_API_BASE_URL}/api/pac/simulation`, {
     departmentCode: formState.selectedLocation.departmentCode,
-    dpe: getSimulationDpe(formState.dpe),
+    dpe: formState.dpe === 'unknown' ? 'D' : formState.dpe,
     incomeCategory: formState.incomeCategory,
     occupants: Number(formState.occupants),
     surface: Number(formState.surface),
@@ -84,7 +83,7 @@ async function postJson(url: string, body: unknown, signal?: AbortSignal) {
 function toLocationSuggestion(feature: BanMunicipalityFeature): LocationSuggestion {
   return {
     city: feature.properties.city,
-    departmentCode: getDepartmentCode(feature.properties.postcode),
+    departmentCode: feature.properties.postcode.slice(0, 2),
     label: `${feature.properties.postcode} ${feature.properties.city}`,
     postcode: feature.properties.postcode,
   };

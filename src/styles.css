@@ -14,6 +14,10 @@
   background: var(--background-default-grey);
 }
 
+.active-question-card {
+  scroll-margin-top: 2rem;
+}
+
 .question-card-completed {
   display: grid;
   grid-template-columns: 1.25rem minmax(0, 1fr) auto;
