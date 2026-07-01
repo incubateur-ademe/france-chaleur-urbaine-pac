@@ -62,6 +62,11 @@ describe('App', () => {
 
   it('shows an inline recommendation and stops the journey for electric radiators', () => {
     window.history.replaceState(null, '', '/?step=3&housing=house&situation=owner');
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
 
     render(<App />);
 
@@ -73,6 +78,7 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Aller sur .*Watt Watchers/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continuer' })).not.toBeInTheDocument();
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
   });
 
   it('shows the heated surface before the occupant count', () => {
@@ -152,5 +158,34 @@ describe('App', () => {
     expect(searchParams.get('postcode')).toBe('64200');
     expect(searchParams.get('departmentCode')).toBeNull();
     expect(screen.getByText('Commune sélectionnée : 64200 Biarritz')).toBeInTheDocument();
+  });
+
+  it('scrolls down when the final result action appears', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/?step=8&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&postcode=64200&dpe=D&surface=100&occupants=2'
+    );
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        return new Response(JSON.stringify([]), {
+          headers: { 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      }) satisfies typeof fetch
+    );
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('radio', { name: /^Modeste\b/i }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Voir mes résultats' })).toBeInTheDocument());
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
   });
 });

@@ -18,6 +18,10 @@
   scroll-margin-top: 2rem;
 }
 
+.scroll-target-callout {
+  scroll-margin-top: 2rem;
+}
+
 .question-card-completed {
   display: grid;
   grid-template-columns: 1.25rem minmax(0, 1fr) auto;
@@ -587,14 +591,14 @@
   color: var(--text-title-blue-france);
 }
 
-.comparison-row > span {
+.comparison-table .comparison-row > span {
   min-height: 3.25rem;
   padding: 0.5rem;
   white-space: nowrap;
   text-align: center;
 }
 
-.comparison-row > span:first-child {
+.comparison-table .comparison-row > span:first-child {
   padding-left: 0;
 }
 
@@ -744,7 +748,7 @@
     white-space: normal;
   }
 
-  .comparison-row-saving span {
+  .comparison-table .comparison-row-saving > span {
     display: none;
   }
 

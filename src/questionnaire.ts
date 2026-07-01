@@ -59,8 +59,8 @@ export function getSearchParams(formState: FormState, currentStep: number) {
   setSearchParam(searchParams, 'equipment', formState.heatingEquipment);
   setSearchParam(searchParams, 'location', formState.location);
   setSearchParam(searchParams, 'dpe', formState.dpe);
-  setSearchParam(searchParams, 'occupants', formState.occupants);
-  setSearchParam(searchParams, 'surface', formState.surface);
+  setSearchParamUnlessDefault(searchParams, 'occupants', formState.occupants, INITIAL_FORM_STATE.occupants);
+  setSearchParamUnlessDefault(searchParams, 'surface', formState.surface, INITIAL_FORM_STATE.surface);
   setSearchParam(searchParams, 'incomeCategory', formState.incomeCategory);
   setSearchParam(searchParams, 'postcode', formState.selectedLocation?.postcode || null);
 
@@ -176,6 +176,14 @@ function getLastAvailableStep(formState: FormState) {
 
 function setSearchParam(searchParams: URLSearchParams, key: string, value: string | null) {
   if (!value) {
+    return;
+  }
+
+  searchParams.set(key, value);
+}
+
+function setSearchParamUnlessDefault(searchParams: URLSearchParams, key: string, value: string, defaultValue: string) {
+  if (value === defaultValue) {
     return;
   }
 

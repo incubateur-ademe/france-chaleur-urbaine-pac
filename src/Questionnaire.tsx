@@ -77,18 +77,41 @@ export function Questionnaire({
   onLocationSelect,
 }: QuestionnaireProps) {
   const activeQuestionRef = useRef<HTMLElement>(null);
+  const recommendationCalloutRef = useRef<HTMLDivElement>(null);
+  const resultActionCalloutRef = useRef<HTMLDivElement>(null);
   const displayedIncomeOptions = incomeOptions.length > 0 ? incomeOptions : getFallbackIncomeOptions();
   const isNextDisabled = getIsNextDisabled(currentStep, formState);
   const recommendationOutcome = getRecommendationOutcome(currentStep, routeOutcome);
   const completedStepSummaries = getCompletedStepSummaries(formState, currentStep);
+  const shouldShowStepAction = !recommendationOutcome && getShouldShowNextAction(currentStep);
+  const shouldShowResultAction = shouldShowStepAction && currentStep === TOTAL_STEPS && !isNextDisabled;
 
   useEffect(() => {
     if (currentStep < 1 || currentStep > TOTAL_STEPS) {
       return;
     }
 
+    // Keep the active question visible when the journey moves between steps.
     activeQuestionRef.current?.scrollIntoView({ block: 'start' });
   }, [currentStep]);
+
+  useEffect(() => {
+    if (!recommendationOutcome) {
+      return;
+    }
+
+    // Blocking recommendations appear after a choice without changing steps.
+    recommendationCalloutRef.current?.scrollIntoView({ block: 'start' });
+  }, [recommendationOutcome]);
+
+  useEffect(() => {
+    if (!shouldShowResultAction) {
+      return;
+    }
+
+    // The final action appears after the last required answer is selected.
+    resultActionCalloutRef.current?.scrollIntoView({ block: 'start' });
+  }, [shouldShowResultAction]);
 
   return (
     <>
@@ -116,12 +139,11 @@ export function Questionnaire({
             onLocationChange,
             onLocationSelect,
           })}
-          {recommendationOutcome && <RecommendationCallout outcome={recommendationOutcome} />}
-          {!recommendationOutcome &&
-            getShouldShowNextAction(currentStep) &&
+          {recommendationOutcome && <RecommendationCallout calloutRef={recommendationCalloutRef} outcome={recommendationOutcome} />}
+          {shouldShowStepAction &&
             (currentStep === TOTAL_STEPS ? (
-              !isNextDisabled && (
-                <div className="fr-callout fr-callout--blue-cumulus">
+              shouldShowResultAction && (
+                <div ref={resultActionCalloutRef} className="fr-callout fr-callout--blue-cumulus scroll-target-callout">
                   <h3 className="fr-callout__title">Vos réponses sont complètes</h3>
                   <p className="fr-callout__text">Nous avons tout ce qu'il faut pour estimer votre projet de pompe à chaleur.</p>
                   <StepActions nextLabel="Voir mes résultats" onHandleStep={onHandleStep} />
@@ -448,11 +470,16 @@ function StepActions({ isNextDisabled = false, nextLabel = 'Continuer', onHandle
   );
 }
 
-function RecommendationCallout({ outcome }: { outcome: Exclude<RouteOutcome, 'continue'> }) {
+type RecommendationCalloutProps = {
+  calloutRef: React.RefObject<HTMLDivElement | null>;
+  outcome: Exclude<RouteOutcome, 'continue'>;
+};
+
+function RecommendationCallout({ calloutRef, outcome }: RecommendationCalloutProps) {
   const recommendation = RECOMMENDATIONS[outcome];
 
   return (
-    <div className="fr-callout fr-callout--blue-cumulus">
+    <div ref={calloutRef} className="fr-callout fr-callout--blue-cumulus scroll-target-callout">
       <p className="fr-text--lg fr-text--bold fr-text-title--blue-france fr-mb-3v">
         <span className="fr-icon-info-fill fr-mr-3v" />
         {recommendation.title}
