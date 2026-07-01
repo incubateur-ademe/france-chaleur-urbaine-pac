@@ -470,7 +470,7 @@
 }
 
 .annual-bill-row {
-  grid-template-columns: 13rem minmax(10rem, 36rem) 12rem;
+  grid-template-columns: 13rem auto 12rem;
   padding: 0.4rem 0;
   border-bottom: 0;
 }
@@ -543,7 +543,7 @@
 
 .annual-bills-footer {
   display: grid;
-  grid-template-columns: 13rem minmax(10rem, 36rem) 12rem;
+  grid-template-columns: 13rem auto 12rem;
   align-items: start;
 }
 

@@ -165,7 +165,7 @@ function CostAndAidDetails({ result }: { result: SimulationResult }) {
   const costRows = [
     {
       label: "Prix moyen d'une PAC air/eau (coût d'installation)",
-      value: formatCurrency(result.heatPumpGrossPrice),
+      value: formatCurrencyRange(result.heatPumpGrossPrice, 1000),
       valueClassName: 'cost-positive',
     },
     {
@@ -181,7 +181,7 @@ function CostAndAidDetails({ result }: { result: SimulationResult }) {
     {
       label: 'Reste à charge estimé',
       rowClassName: 'cost-row-total fr-text--bold',
-      value: formatCurrency(result.heatPumpNetPrice),
+      value: formatCurrencyRange(result.heatPumpNetPrice, 1000),
       valueClassName: 'cost-total',
     },
   ] satisfies CostRow[];
