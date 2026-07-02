@@ -108,7 +108,7 @@ export function App() {
   };
 
   return (
-    <main className="fr-background-default--grey simulator-pac">
+    <main className="fr-background-default--grey simulator-pac fr-mb-20v">
       <div className="fr-container fr-py-4w">
         <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
           Retour
