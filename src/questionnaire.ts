@@ -101,6 +101,24 @@ export function getPreviousStep(currentStep: number, formState: FormState) {
   return Math.max(currentStep - 1, 1);
 }
 
+export function getFormStateForStep(formState: FormState, currentStep: number) {
+  if (currentStep === 0) {
+    return INITIAL_FORM_STATE;
+  }
+
+  return {
+    dpe: currentStep > 5 ? formState.dpe : null,
+    heatingEquipment: currentStep > 3 ? formState.heatingEquipment : null,
+    housingType: currentStep > 2 ? formState.housingType : null,
+    incomeCategory: currentStep > 8 ? formState.incomeCategory : null,
+    location: currentStep > 4 ? formState.location : INITIAL_FORM_STATE.location,
+    occupants: currentStep > 7 ? formState.occupants : INITIAL_FORM_STATE.occupants,
+    ownerStatus: currentStep > 1 ? formState.ownerStatus : null,
+    selectedLocation: currentStep > 4 ? formState.selectedLocation : null,
+    surface: currentStep > 6 ? formState.surface : INITIAL_FORM_STATE.surface,
+  } satisfies FormState;
+}
+
 function getInitialSelectedLocation(searchParams: URLSearchParams) {
   const label = searchParams.get('location') ?? searchParams.get('address');
   const postcode = searchParams.get('postcode');

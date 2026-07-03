@@ -86,6 +86,7 @@ export type ChoiceStepConfig<TValue extends string> = {
   legend: string;
   hint?: string;
   name: string;
+  radioVariant?: 'rich' | 'simple';
   options: readonly {
     badgeClassName?: string;
     fieldsetElementClassName?: string;
@@ -149,4 +150,5 @@ export const DPE_STEP_CONFIG = {
     label: dpeValue === 'unknown' ? 'Je ne sais pas (une étiquette D sera enregistrée)' : dpeValue,
     value: dpeValue,
   })),
+  radioVariant: 'simple',
 } satisfies ChoiceStepConfig<DpeInput>;

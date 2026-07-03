@@ -140,19 +140,17 @@ export function Questionnaire({
             onLocationSelect,
           })}
           {recommendationOutcome && <RecommendationCallout calloutRef={recommendationCalloutRef} outcome={recommendationOutcome} />}
-          {shouldShowStepAction &&
-            (currentStep === TOTAL_STEPS ? (
-              shouldShowResultAction && (
-                <div ref={resultActionCalloutRef} className="fr-callout fr-callout--blue-cumulus scroll-target-callout">
-                  <h3 className="fr-callout__title">Vos réponses sont complètes</h3>
-                  <p className="fr-callout__text">Nous avons tout ce qu'il faut pour estimer votre projet de pompe à chaleur.</p>
-                  <StepActions nextLabel="Voir mes résultats" onHandleStep={onHandleStep} />
-                </div>
-              )
-            ) : (
-              <StepActions isNextDisabled={isNextDisabled} nextLabel="Continuer" onHandleStep={onHandleStep} />
-            ))}
+          {shouldShowStepAction && currentStep !== TOTAL_STEPS && (
+            <StepActions isNextDisabled={isNextDisabled} nextLabel="Continuer" onHandleStep={onHandleStep} />
+          )}
         </section>
+        {shouldShowResultAction && (
+          <article ref={resultActionCalloutRef} className="question-card result-step scroll-target-callout">
+            <h3 className="fr-callout__title">Vos réponses sont complètes</h3>
+            <p className="fr-callout__text">Nous avons tout ce qu'il faut pour estimer votre projet de pompe à chaleur.</p>
+            <StepActions nextLabel="Voir mes résultats" onHandleStep={onHandleStep} />
+          </article>
+        )}
       </div>
     </>
   );
@@ -162,7 +160,7 @@ export function Stepper({ currentStep }: { currentStep: number }) {
   const nextStepTitle = STEP_CONFIGS[currentStep]?.kicker;
 
   return (
-    <div className="fr-stepper">
+    <div className="fr-stepper fr-mb-0">
       <h2 className="fr-stepper__title">
         {currentStep === TOTAL_STEPS ? (
           <span>Vos résultats</span>
@@ -310,10 +308,10 @@ function CompletedStepCard({ summary, onEditStep }: { summary: CompletedStepSumm
     <article className="question-card question-card-completed">
       <span className="fr-icon-checkbox-circle-fill question-card-check" aria-hidden="true" />
       <div>
-        <p className="fr-text-title--blue-france uppercase fr-mb-0">{summary.label}</p>
+        <p className="fr-text-title--blue-france uppercase fr-mb-0 fr-text--sm">{summary.label}</p>
         <p className="question-summary-value">{summary.value}</p>
       </div>
-      <button className="fr-btn fr-btn--tertiary-no-outline question-edit-button" type="button" onClick={() => onEditStep(summary.step)}>
+      <button className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline" type="button" onClick={() => onEditStep(summary.step)}>
         Modifier
       </button>
     </article>
@@ -412,7 +410,17 @@ type ChoiceStepProps<TValue extends string> = ChoiceStepConfig<TValue> & {
   onSelect: (value: TValue) => void;
 };
 
-function ChoiceStep<TValue extends string>({ legend, hint, name, options, selectedValue, onSelect }: ChoiceStepProps<TValue>) {
+function ChoiceStep<TValue extends string>({
+  legend,
+  hint,
+  name,
+  options,
+  radioVariant = 'rich',
+  selectedValue,
+  onSelect,
+}: ChoiceStepProps<TValue>) {
+  const radioGroupClassName = radioVariant === 'rich' ? 'fr-radio-group fr-radio-rich' : 'fr-radio-group';
+
   return (
     <fieldset className="fr-fieldset">
       <legend className="fr-fieldset__legend--regular fr-fieldset__legend">
@@ -424,7 +432,7 @@ function ChoiceStep<TValue extends string>({ legend, hint, name, options, select
           className={`fr-mb-0 fr-fieldset__element fr-fieldset__element--inline${option.fieldsetElementClassName ? ` ${option.fieldsetElementClassName}` : ''}`}
           key={option.value}
         >
-          <div className="fr-radio-group fr-radio-rich">
+          <div className={radioGroupClassName}>
             <input
               checked={selectedValue === option.value}
               id={`${name}-${option.value}`}
@@ -459,7 +467,7 @@ function StepActions({ isNextDisabled = false, nextLabel = 'Continuer', onHandle
   return (
     <div className="step-actions fr-mt-3v">
       <button
-        className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
+        className={`fr-btn fr-btn--icon-right fr-icon-arrow-right-line ${nextLabel === 'Voir mes résultats' && 'fr-btn--lg'}`}
         disabled={isNextDisabled}
         type="button"
         onClick={() => onHandleStep('next')}

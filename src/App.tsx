@@ -102,52 +102,62 @@ export function App() {
       window.history.back();
       return;
     }
-
+    if (currentStep === 1) {
+      setResult(null);
+      setFormState(INITIAL_FORM_STATE);
+      setCurrentStep(0);
+      return;
+    }
     setResult(null);
     setCurrentStep(getPreviousStep(currentStep, formState));
   };
-
+  const isResultStep = currentStep === RESULT_STEP;
   return (
-    <main className="fr-background-default--grey simulator-pac fr-mb-20v">
-      <div className="fr-container fr-py-4w">
-        <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
-          Retour
-        </button>
-        <div>
-          <h1 className="fr-h2">
+    <main className="simulator-pac">
+      <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
+        Retour
+      </button>
+      <div className={isResultStep ? 'fr-grid-row fr-grid-row--middle fr-grid-row--gutters' : ''}>
+        <div className={isResultStep ? 'fr-col' : ''}>
+          <h1 className="fr-h3">
             Vous avez une chaudière au gaz ou au fioul ?<br />
             Combien ça coûte et combien on économise avec une pompe à chaleur air/eau ?
           </h1>
         </div>
-        {currentStep !== RESULT_STEP && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
-        {currentStep === 0 && <HomeScreen onStart={() => setCurrentStep(1)} />}
-        {currentStep === RESULT_STEP && (
-          <ResultsPage
-            currentHeatingEquipment={formState.heatingEquipment}
-            isSubmitting={isSubmitting}
-            result={result}
-            onPrevious={() => handleStep('previous')}
-            onRestart={handleRestart}
-          />
-        )}
-        {currentStep > 0 && currentStep < RESULT_STEP && (
-          <Questionnaire
-            currentStep={currentStep}
-            formState={formState}
-            incomeOptions={incomeOptions}
-            isIncomeOptionsLoading={isIncomeOptionsLoading}
-            isLocationLoading={isLocationLoading}
-            locationSuggestions={locationSuggestions}
-            routeOutcome={routeOutcome}
-            onFormChange={handleFormChange}
-            onChoiceSelect={handleQuestionnaireChoice}
-            onEditStep={handleEditStep}
-            onHandleStep={handleStep}
-            onLocationChange={handleLocationChange}
-            onLocationSelect={handleLocationSelect}
-          />
+        {isResultStep && (
+          <div className="fr-col-auto">
+            <img src="/pac.png" width={92} height={100} alt="PAC air-eau" />
+          </div>
         )}
       </div>
+      {!isResultStep && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
+      {currentStep === 0 && <HomeScreen onStart={() => setCurrentStep(1)} />}
+      {isResultStep && (
+        <ResultsPage
+          currentHeatingEquipment={formState.heatingEquipment}
+          isSubmitting={isSubmitting}
+          result={result}
+          onPrevious={() => handleStep('previous')}
+          onRestart={handleRestart}
+        />
+      )}
+      {currentStep > 0 && currentStep < RESULT_STEP && (
+        <Questionnaire
+          currentStep={currentStep}
+          formState={formState}
+          incomeOptions={incomeOptions}
+          isIncomeOptionsLoading={isIncomeOptionsLoading}
+          isLocationLoading={isLocationLoading}
+          locationSuggestions={locationSuggestions}
+          routeOutcome={routeOutcome}
+          onFormChange={handleFormChange}
+          onChoiceSelect={handleQuestionnaireChoice}
+          onEditStep={handleEditStep}
+          onHandleStep={handleStep}
+          onLocationChange={handleLocationChange}
+          onLocationSelect={handleLocationSelect}
+        />
+      )}
     </main>
   );
 }

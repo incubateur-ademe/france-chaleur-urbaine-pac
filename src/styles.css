@@ -1,3 +1,10 @@
+.simulator-pac {
+  max-width: 960px;
+  margin: auto;
+  margin-bottom: 5rem;
+  padding: 2rem 0;
+  background: #fbfcff;
+}
 .simulator-pac .uppercase {
   text-transform: uppercase;
 }
@@ -12,6 +19,7 @@
 .question-card {
   border: 1px solid var(--border-default-grey);
   background: var(--background-default-grey);
+  margin-bottom: 1.5rem;
 }
 
 .active-question-card {
@@ -48,15 +56,9 @@
 .question-summary-value {
   margin: 0.125rem 0 0;
   color: var(--text-title-grey);
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.35;
-}
-
-.question-edit-button {
-  min-height: 2rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
 }
 
 .journey-panel {
@@ -219,10 +221,15 @@
   margin-top: 1.5rem;
 }
 
+.result-step {
+  background: #e8edff;
+  padding: 2rem;
+}
+
 .simulation-summary {
   display: grid;
   width: 100%;
-  gap: 1.25rem;
+  gap: 2rem;
 }
 
 .result-intro {
@@ -270,7 +277,7 @@
   gap: 1rem;
   align-items: center;
   min-height: 7.25rem;
-  padding: 1.15rem 1.5rem;
+  padding: 1.15rem 1rem;
   border: 1px solid #ddd;
   background: var(--background-default-grey);
 }
@@ -278,7 +285,8 @@
 .summary-card h3 {
   margin: 0;
   color: #161616;
-  font-size: 1.05rem;
+  font-size: 1.125rem;
+  font-weight: normal;
   line-height: 1.3;
 }
 
@@ -301,7 +309,7 @@
 .summary-card-saving {
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 0.35rem;
+  gap: 1rem;
   border-left: 0.25rem solid var(--background-action-high-blue-france);
   background: #eef2ff;
 }
@@ -329,11 +337,12 @@
 
 .summary-card-saving strong,
 .summary-card-co2 strong,
-.cost-negative,
 .result-note-success {
+  color: #27a959;
+}
+.cost-negative {
   color: var(--text-default-success);
 }
-
 .summary-card-saving strong span {
   margin-left: 0.25rem;
   font-size: 1.15rem;
@@ -436,24 +445,27 @@
 .cost-row-total {
   background: var(--background-contrast-grey);
 }
-
+.cost-row-total span {
+  font-size: 18px;
+}
 .ptz {
   background: #e8edff;
 }
 
-.cost-row strong,
-.comparison-row strong {
+.cost-row strong {
   margin: 0;
   font-weight: 700;
   text-align: right;
+  font-size: 18px;
 }
 
 .cost-positive {
   color: #c74700;
 }
 
-.cost-total {
+.cost-row .cost-total {
   color: var(--text-title-blue-france);
+  font-size: 22px;
 }
 
 .result-note {
@@ -524,6 +536,7 @@
   font-weight: 700;
   white-space: nowrap;
   text-align: right;
+  font-size: 18px;
 }
 
 .annual-bill-metrics small {
@@ -587,10 +600,6 @@
   padding: 0;
 }
 
-.comparison-row strong:nth-child(3) {
-  color: var(--text-title-blue-france);
-}
-
 .comparison-table .comparison-row > span {
   min-height: 3.25rem;
   padding: 0.5rem;
@@ -614,6 +623,8 @@
 .comparison-pac-cell-bottom {
   border-bottom: 0.1875rem solid var(--background-action-high-blue-france);
   color: var(--text-default-success);
+  font-size: 18px;
+  background: #f8faff;
 }
 
 .comparison-row-saving {
@@ -691,11 +702,6 @@
     grid-template-columns: 1.25rem minmax(0, 1fr);
   }
 
-  .question-edit-button {
-    grid-column: 2;
-    justify-self: start;
-  }
-
   .summary-grid,
   .annual-bill-row,
   .comparison-row,
@@ -736,7 +742,6 @@
     grid-template-columns: 1fr;
   }
 
-  .cost-row strong,
   .annual-bill-metrics,
   .annual-bill-metrics strong,
   .comparison-row strong {

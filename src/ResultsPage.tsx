@@ -1,3 +1,5 @@
+import type React from 'react';
+
 import { HOME_FEATURES } from '@/HomeScreen';
 import { Stepper } from '@/Questionnaire';
 
@@ -18,7 +20,7 @@ export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, onP
     <section className="step-content result-panel" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
       {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} />}
-      <div className="step-actions">
+      <div className="step-actions fr-mt-5v">
         <button className="fr-btn fr-btn--secondary" type="button" onClick={onPrevious}>
           Précédent
         </button>
@@ -33,7 +35,6 @@ export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, onP
 function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment: HeatingEquipment | null; result: SimulationResult }) {
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
   const maxAnnualBill = Math.max(...annualBillRows.map((annualBillRow) => annualBillRow.amount), 1);
-  const estimatedAid = result.heatPumpMaprimerenovAid + result.heatPumpBoilerReplacementBonus;
   const boilerAverageAnnualBill = (result.gasBoilerAnnualBill + result.oilBoilerAnnualBill) / 2;
   const annualSavings = Math.max(boilerAverageAnnualBill - result.heatPumpAnnualBill, 0);
   const heatPumpComparison = result.heatingModeComparisons.find((comparison) => comparison.label === 'PAC air/eau');
@@ -46,7 +47,7 @@ function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment:
   return (
     <section className="simulation-summary">
       <Stepper currentStep={8} />
-      <p>
+      <p className="fr-text--lg fr-mb-0">
         En remplaçant votre <strong>chaudière à gaz</strong> par une <strong>pompe à chaleur air/eau</strong>, veuillez-trouver-ci dessous
         les gains économiques et écologiques pour une maison individuelle de 100 m2.
       </p>
@@ -76,7 +77,15 @@ function ResultSummaryGrid({ annualSavings, avoidedCo2, result }: { annualSaving
         variant="primary"
       />
       <SummaryCard
-        description="sur vos factures, soit un investissement amorti en ≈ 10 ans"
+        description={
+          <>
+            sur vos factures, soit un investissement amorti en ≈ 10 ans
+            <span aria-describedby="tooltip" className="fr-icon--sm fr-icon-information-fill fr-ml-1v" />
+            <span className="fr-tooltip fr-placement" id="tooltip" role="tooltip">
+              En comparaison d'un remplacement de votre chaudière à l'identique
+            </span>
+          </>
+        }
         label="Économies sur vos factures"
         suffix="/ an"
         value={`- ${formatCurrencyRange(annualSavings, 100)}`}
@@ -99,7 +108,7 @@ function ResultSummaryGrid({ annualSavings, avoidedCo2, result }: { annualSaving
 }
 
 type SummaryCardProps = {
-  description: string;
+  description: React.ReactNode;
   label: string;
   suffix?: string;
   value: string;
@@ -152,7 +161,7 @@ function AdvisorCallout() {
         <p>
           Un conseiller France Rénov’ vous accompagne <strong>gratuitement et en toute neutralité</strong>.
         </p>
-        <a className="fr-btn" href="https://france-renov.gouv.fr/preparer-projet/trouver-conseiller">
+        <a className="fr-btn fr-btn--lg" href="https://france-renov.gouv.fr/preparer-projet/trouver-conseiller">
           Trouver un conseiller France Rénov’
         </a>
       </div>
@@ -253,7 +262,7 @@ function AnnualBillsChart({ annualBillRows, maxAnnualBill }: { annualBillRows: A
             <div className="annual-bill-metrics">
               <strong>{formatAnnualBillRange(annualBillRow.amount)}</strong>
               <small className={annualBillRow.co2ClassName}>
-                <span className="fr-icon-leaf-fill" aria-hidden="true" /> {formatNumber(annualBillRow.co2 / 1000)} t
+                <span className="fr-icon--sm fr-icon-leaf-fill" aria-hidden="true" /> {formatNumber(annualBillRow.co2 / 1000)} t
               </small>
             </div>
           </div>
@@ -289,8 +298,10 @@ function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnual
       <div className="comparison-table">
         <div className="comparison-row">
           <span />
-          <span>Remplacer la chaudière à l’identique</span>
-          <span className="comparison-pac-cell comparison-pac-cell-top fr-text-title--blue-france">Installer une pompe à chaleur</span>
+          <span className="fr-text--lg fr-text--bold fr-mb-0">Remplacer la chaudière à l’identique</span>
+          <span className="comparison-pac-cell comparison-pac-cell-top fr-text-title--blue-france fr-text--lg fr-text--bold fr-mb-0">
+            Installer une pompe à chaleur
+          </span>
         </div>
         <div className="comparison-row">
           <span>Coût d’installation</span>
@@ -306,7 +317,7 @@ function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnual
           <span />
           <span />
           <span className="comparison-pac-cell comparison-pac-cell-bottom">
-            ≈ <strong>{formatCurrency(annualSavings)}</strong> / an d’économies annuelles
+            ≈ <strong className="fr-text--xl">{formatCurrency(annualSavings)}</strong> / an d’économies annuelles
           </span>
         </div>
       </div>
@@ -330,7 +341,7 @@ function MethodNotes() {
             <span className={`${feature.iconClassName} fr-icon--lg`} aria-hidden="true" />
           </div>
           <div className="fr-col fr-pl-3v">
-            <h2 className="fr-h4">{feature.title}</h2>
+            <h2 className="fr-h6 fr-mb-3v fr-mt-1v">{feature.title}</h2>
             <p className="fr-mb-0">{feature.description}</p>
           </div>
         </article>
@@ -341,9 +352,9 @@ function MethodNotes() {
 
 function SectionHeading({ iconClassName, title }: { iconClassName: string; title: string }) {
   return (
-    <h3>
+    <h2 className="fr-h5">
       <span className={iconClassName} aria-hidden="true" /> {title}
-    </h3>
+    </h2>
   );
 }
 

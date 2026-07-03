@@ -44,13 +44,13 @@ export function HomeScreen({ onStart }: { onStart: () => void }) {
               <span className={`${feature.iconClassName} fr-icon--lg`} aria-hidden="true" />
             </div>
             <div className="fr-col fr-pl-3v">
-              <h2 className="fr-h4">{feature.title}</h2>
+              <h2 className="fr-h6 fr-mb-3v fr-mt-1v">{feature.title}</h2>
               <p className="fr-mb-0">{feature.description}</p>
             </div>
           </article>
         ))}
       </div>
-      <button className="fr-my-6v fr-btn fr-btn--icon-right fr-icon-arrow-right-line" type="button" onClick={onStart}>
+      <button className="fr-my-6v fr-btn fr-btn--lg fr-btn--icon-right fr-icon-arrow-right-line" type="button" onClick={onStart}>
         Démarrer la simulation
       </button>
       <p className="fr-mt-3v">
