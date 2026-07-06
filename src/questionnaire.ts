@@ -6,6 +6,7 @@ import {
   INCOME_CATEGORY_VALUES,
   type LocationSuggestion,
   OWNER_STATUS_VALUES,
+  type QuestionnaireChoice,
   type RouteOutcome,
 } from './types';
 
@@ -101,22 +102,20 @@ export function getPreviousStep(currentStep: number, formState: FormState) {
   return Math.max(currentStep - 1, 1);
 }
 
-export function getFormStateForStep(formState: FormState, currentStep: number) {
-  if (currentStep === 0) {
-    return INITIAL_FORM_STATE;
+export function getNextStepFromChoice(choice: QuestionnaireChoice) {
+  if (choice.field === 'ownerStatus') {
+    return choice.value === 'tenant' ? 1 : 2;
   }
 
-  return {
-    dpe: currentStep > 5 ? formState.dpe : null,
-    heatingEquipment: currentStep > 3 ? formState.heatingEquipment : null,
-    housingType: currentStep > 2 ? formState.housingType : null,
-    incomeCategory: currentStep > 8 ? formState.incomeCategory : null,
-    location: currentStep > 4 ? formState.location : INITIAL_FORM_STATE.location,
-    occupants: currentStep > 7 ? formState.occupants : INITIAL_FORM_STATE.occupants,
-    ownerStatus: currentStep > 1 ? formState.ownerStatus : null,
-    selectedLocation: currentStep > 4 ? formState.selectedLocation : null,
-    surface: currentStep > 6 ? formState.surface : INITIAL_FORM_STATE.surface,
-  } satisfies FormState;
+  if (choice.field === 'housingType') {
+    return choice.value === 'apartment' ? 2 : 3;
+  }
+
+  if (choice.field === 'heatingEquipment') {
+    return choice.value === 'electric-radiator' ? 3 : 4;
+  }
+
+  return 6;
 }
 
 function getInitialSelectedLocation(searchParams: URLSearchParams) {

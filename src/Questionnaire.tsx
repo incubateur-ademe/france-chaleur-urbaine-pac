@@ -3,11 +3,8 @@ import { useEffect, useRef } from 'react';
 import {
   type ChoiceStepConfig,
   DPE_STEP_CONFIG,
-  HEATING_EQUIPMENT_LABELS,
   HEATING_EQUIPMENT_STEP_CONFIG,
-  HOUSING_TYPE_LABELS,
   HOUSING_TYPE_STEP_CONFIG,
-  OWNER_STATUS_LABELS,
   OWNER_STATUS_STEP_CONFIG,
   QUESTIONNAIRE_STEPS,
   RECOMMENDATIONS,
@@ -22,28 +19,7 @@ import {
   type RouteOutcome,
 } from './types';
 
-const STEP_SUMMARY_GETTERS = [
-  getOwnerStatusSummary,
-  getHousingTypeSummary,
-  getHeatingEquipmentSummary,
-  getLocationStepSummary,
-  getDpeSummary,
-  getSurfaceSummary,
-  getOccupantsSummary,
-  getIncomeCategorySummary,
-] satisfies readonly ((formState: FormState) => string | null)[];
-
-const STEP_CONFIGS: readonly StepConfig[] = QUESTIONNAIRE_STEPS.map((stepConfig, stepIndex) => ({
-  ...stepConfig,
-  getSummaryValue: STEP_SUMMARY_GETTERS[stepIndex],
-}));
-
-type StepConfig = {
-  getSummaryValue: (formState: FormState) => string | null;
-  kicker: string;
-  shouldShowNextAction?: boolean;
-  title: string;
-};
+const STEP_CONFIGS = QUESTIONNAIRE_STEPS;
 
 type QuestionnaireProps = {
   currentStep: number;
@@ -523,48 +499,16 @@ function getCompletedStepSummaries(formState: FormState, currentStep: number) {
   return summaries.filter((summary): summary is CompletedStepSummary => summary !== null && summary.step < currentStep);
 }
 
-function getOwnerStatusSummary(formState: FormState) {
-  return formState.ownerStatus ? OWNER_STATUS_LABELS[formState.ownerStatus] : null;
-}
-
-function getHousingTypeSummary(formState: FormState) {
-  return formState.housingType ? HOUSING_TYPE_LABELS[formState.housingType] : null;
-}
-
-function getHeatingEquipmentSummary(formState: FormState) {
-  return formState.heatingEquipment ? HEATING_EQUIPMENT_LABELS[formState.heatingEquipment] : null;
-}
-
-function getLocationStepSummary(formState: FormState) {
-  return formState.selectedLocation ? getLocationSummary(formState.selectedLocation) : null;
-}
-
-function getDpeSummary(formState: FormState) {
-  return formState.dpe ? (formState.dpe === 'unknown' ? 'Je ne sais pas (D)' : `Classe ${formState.dpe}`) : null;
-}
-
-function getSurfaceSummary(formState: FormState) {
-  return isValidNumberInput(formState.surface, 1) ? `${formState.surface} m²` : null;
-}
-
-function getOccupantsSummary(formState: FormState) {
-  if (!isValidNumberInput(formState.occupants, 1)) return null;
-  const occupantsNumber = Number(formState.occupants);
-  return `${formState.occupants} personne${occupantsNumber > 1 ? 's' : ''}`;
-}
-
-function getIncomeCategorySummary(formState: FormState) {
-  return formState.incomeCategory;
-}
-
-function getLocationSummary(selectedLocation: LocationSuggestion) {
-  return selectedLocation.city ? `${selectedLocation.postcode} ${selectedLocation.city}` : selectedLocation.label;
-}
-
 function getShouldShowStepAction(currentStep: number, formState: FormState) {
   const stepConfig = STEP_CONFIGS[currentStep - 1];
 
-  return stepConfig ? stepConfig.shouldShowNextAction === true || stepConfig.getSummaryValue(formState) !== null : false;
+  if (!stepConfig) {
+    return false;
+  }
+
+  const shouldShowNextAction = 'shouldShowNextAction' in stepConfig && stepConfig.shouldShowNextAction === true;
+
+  return shouldShowNextAction || stepConfig.getSummaryValue(formState) !== null;
 }
 
 function getRecommendationOutcome(currentStep: number, routeOutcome: RouteOutcome) {
@@ -593,10 +537,4 @@ function getIsNextDisabled(currentStep: number, formState: FormState) {
   const stepConfig = STEP_CONFIGS[currentStep - 1];
 
   return stepConfig ? stepConfig.getSummaryValue(formState) === null : true;
-}
-
-function isValidNumberInput(value: string, min: number) {
-  const numericValue = Number(value);
-
-  return Number.isFinite(numericValue) && numericValue >= min;
 }

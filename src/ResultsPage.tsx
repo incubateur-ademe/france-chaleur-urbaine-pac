@@ -15,7 +15,7 @@ type ResultsPageProps = {
 
 export function ResultsPage({ currentHeatingEquipment, isSubmitting, result }: ResultsPageProps) {
   return (
-    <section className="step-content result-panel" aria-labelledby="step-title">
+    <section className="step-content" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
       {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} />}
     </section>

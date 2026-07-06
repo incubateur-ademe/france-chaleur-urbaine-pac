@@ -1,4 +1,13 @@
-import { DPE_VALUES, type DpeInput, type HeatingEquipment, type HousingType, type OwnerStatus, type RouteOutcome } from './types';
+import {
+  DPE_VALUES,
+  type DpeInput,
+  type FormState,
+  type HeatingEquipment,
+  type HousingType,
+  type LocationSuggestion,
+  type OwnerStatus,
+  type RouteOutcome,
+} from './types';
 
 export const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/';
 export const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable';
@@ -43,37 +52,45 @@ export const RECOMMENDATIONS = {
 
 export const QUESTIONNAIRE_STEPS = [
   {
+    getSummaryValue: getOwnerStatusSummary,
     kicker: 'Statut d’occupation',
     title: "Statut d'occupation",
   },
   {
+    getSummaryValue: getHousingTypeSummary,
     kicker: 'Type de logement',
     title: 'Votre logement',
   },
   {
+    getSummaryValue: getHeatingEquipmentSummary,
     kicker: 'Chauffage actuel',
     title: 'Votre mode de chauffage',
   },
   {
+    getSummaryValue: getLocationStepSummary,
     kicker: 'Code postal',
     shouldShowNextAction: true,
     title: 'Votre code postal',
   },
   {
+    getSummaryValue: getDpeSummary,
     kicker: 'Classe Énergétique',
     title: 'Votre DPE',
   },
   {
+    getSummaryValue: getSurfaceSummary,
     kicker: 'Surface chauffée',
     shouldShowNextAction: true,
     title: 'Surface chauffée',
   },
   {
+    getSummaryValue: getOccupantsSummary,
     kicker: 'Composition du foyer',
     shouldShowNextAction: true,
     title: 'Composition du foyer',
   },
   {
+    getSummaryValue: getIncomeCategorySummary,
     kicker: 'Revenus du foyer',
     shouldShowNextAction: true,
     title: 'Votre situation',
@@ -152,3 +169,51 @@ export const DPE_STEP_CONFIG = {
   })),
   radioVariant: 'simple',
 } satisfies ChoiceStepConfig<DpeInput>;
+
+function getOwnerStatusSummary(formState: FormState) {
+  return formState.ownerStatus ? OWNER_STATUS_LABELS[formState.ownerStatus] : null;
+}
+
+function getHousingTypeSummary(formState: FormState) {
+  return formState.housingType ? HOUSING_TYPE_LABELS[formState.housingType] : null;
+}
+
+function getHeatingEquipmentSummary(formState: FormState) {
+  return formState.heatingEquipment ? HEATING_EQUIPMENT_LABELS[formState.heatingEquipment] : null;
+}
+
+function getLocationStepSummary(formState: FormState) {
+  return formState.selectedLocation ? getLocationSummary(formState.selectedLocation) : null;
+}
+
+function getDpeSummary(formState: FormState) {
+  return formState.dpe ? (formState.dpe === 'unknown' ? 'Je ne sais pas (D)' : `Classe ${formState.dpe}`) : null;
+}
+
+function getSurfaceSummary(formState: FormState) {
+  return isValidNumberInput(formState.surface, 1) ? `${formState.surface} m²` : null;
+}
+
+function getOccupantsSummary(formState: FormState) {
+  if (!isValidNumberInput(formState.occupants, 1)) {
+    return null;
+  }
+
+  const occupantsNumber = Number(formState.occupants);
+
+  return `${formState.occupants} personne${occupantsNumber > 1 ? 's' : ''}`;
+}
+
+function getIncomeCategorySummary(formState: FormState) {
+  return formState.incomeCategory;
+}
+
+function getLocationSummary(selectedLocation: LocationSuggestion) {
+  return selectedLocation.city ? `${selectedLocation.postcode} ${selectedLocation.city}` : selectedLocation.label;
+}
+
+function isValidNumberInput(value: string, min: number) {
+  const numericValue = Number(value);
+
+  return Number.isFinite(numericValue) && numericValue >= min;
+}

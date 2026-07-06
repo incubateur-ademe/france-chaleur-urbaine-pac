@@ -8,10 +8,6 @@
 .simulator-pac .uppercase {
   text-transform: uppercase;
 }
-.home-back-button {
-  justify-self: start;
-}
-
 .home-feature {
   border: 1px solid var(--border-default-grey);
 }
@@ -47,25 +43,12 @@
   font-weight: bold;
 }
 
-.question-summary-label {
-  margin: 0;
-  line-height: 1.35;
-  text-transform: uppercase;
-}
-
 .question-summary-value {
   margin: 0.125rem 0 0;
   color: var(--text-title-grey);
   font-size: 1.125rem;
   font-weight: 700;
   line-height: 1.35;
-}
-
-.journey-panel {
-  max-width: 52rem;
-  padding: 2rem;
-  border: 1px solid var(--border-default-grey);
-  background: var(--background-default-grey);
 }
 
 .step-content {
@@ -100,31 +83,6 @@
 .question-card .fr-radio-rich,
 .question-card .fr-radio-rich .fr-label {
   width: 100%;
-}
-
-.choice-fieldset {
-  margin-top: 2rem;
-}
-
-.choice-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 0.75rem;
-}
-
-.choice-options-three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.choice-options .fr-radio-rich {
-  margin: 0;
-}
-
-.choice-options .fr-label {
-  min-height: 2.75rem;
-  align-content: center;
-  font-size: 0.875rem;
-  font-weight: 700;
 }
 
 .location-suggestions {
@@ -191,14 +149,6 @@
   background: #d7221f;
 }
 
-.income-options {
-  display: grid;
-}
-
-.income-options .fr-radio-group {
-  width: 100%;
-}
-
 .input-with-suffix {
   display: flex;
   max-width: 16rem;
@@ -217,10 +167,6 @@
   justify-content: flex-start;
 }
 
-.recommendation-callout {
-  margin-top: 1.5rem;
-}
-
 .result-step {
   background: #e8edff;
   padding: 2rem;
@@ -230,39 +176,6 @@
   display: grid;
   width: 100%;
   gap: 2rem;
-}
-
-.result-intro {
-  display: grid;
-  gap: 0.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 0.25rem solid var(--background-active-blue-france);
-}
-
-.result-intro h2,
-.result-intro p {
-  margin: 0;
-}
-
-.result-intro h2 {
-  max-width: 34rem;
-  color: var(--text-title-grey);
-  font-size: 1.75rem;
-  line-height: 1.15;
-}
-
-.result-intro .fr-text--lead {
-  max-width: 40rem;
-  color: var(--text-title-grey);
-  font-size: 1.125rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.result-kicker {
-  color: var(--text-title-blue-france);
-  font-size: 0.875rem;
-  font-weight: 700;
 }
 
 .summary-grid {
@@ -336,8 +249,7 @@
 }
 
 .summary-card-saving strong,
-.summary-card-co2 strong,
-.result-note-success {
+.summary-card-co2 strong {
   color: #27a959;
 }
 .cost-negative {
@@ -467,13 +379,6 @@
 .cost-row .cost-total {
   color: var(--text-title-blue-france);
   font-size: 22px;
-}
-
-.result-note {
-  padding: 0.75rem 1rem;
-  border-left: 0.25rem solid var(--background-action-high-blue-france);
-  background: var(--background-alt-blue-france);
-  font-weight: 700;
 }
 
 .annual-bills-heading {
@@ -632,69 +537,7 @@
   border-bottom: 0;
 }
 
-.comparison-highlight {
-  padding: 1rem 1.5rem;
-  border: 1px solid var(--border-default-grey);
-  border-left: 0.25rem solid var(--border-default-success);
-  background: var(--background-alt-grey);
-  color: var(--text-default-grey);
-}
-
-.comparison-highlight strong {
-  color: var(--text-default-success);
-}
-
-.method-notes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border: 1px solid var(--border-default-grey);
-}
-
-.method-note {
-  display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr);
-  gap: 0.75rem;
-  min-height: 6.5rem;
-  padding: 1rem;
-  border-right: 1px solid var(--border-default-grey);
-  border-bottom: 1px solid var(--border-default-grey);
-  background: var(--background-default-grey);
-}
-
-.method-note h3 {
-  margin: 0 0 0.35rem;
-  color: var(--text-title-grey);
-  font-size: 0.95rem;
-}
-
-.method-note p {
-  margin: 0;
-  color: var(--text-mention-grey);
-  font-size: 0.8125rem;
-  line-height: 1.35;
-}
-
 @media (max-width: 48em) {
-  .home-heading h1 {
-    font-size: 1.5rem;
-  }
-
-  .simulator-heading h1 {
-    font-size: 1.375rem;
-  }
-
-  .home-feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .journey-panel {
-    padding: 1rem;
-  }
-
-  .choice-options {
-    grid-template-columns: 1fr;
-  }
-
   .question-card .fr-fieldset__element--inline {
     flex: 0 0 100%;
   }
@@ -705,8 +548,7 @@
 
   .summary-grid,
   .annual-bill-row,
-  .comparison-row,
-  .method-notes {
+  .comparison-row {
     grid-template-columns: 1fr;
   }
 
@@ -725,10 +567,6 @@
   .summary-card-power strong {
     grid-column: 2;
     justify-self: start;
-  }
-
-  .result-intro h2 {
-    font-size: 1.45rem;
   }
 
   .advisor-callout {

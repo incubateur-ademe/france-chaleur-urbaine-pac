@@ -5,6 +5,7 @@ import { HomeScreen } from './HomeScreen';
 import { Questionnaire } from './Questionnaire';
 import {
   getInitialJourneyState,
+  getNextStepFromChoice,
   getPreviousStep,
   getRouteOutcome,
   getSearchParams,
@@ -53,21 +54,21 @@ export function App() {
 
   const handleQuestionnaireChoice = (choice: QuestionnaireChoice) => {
     if (choice.field === 'ownerStatus') {
-      handleChoiceChange({ ownerStatus: choice.value }, choice.value === 'tenant' ? 1 : 2);
+      handleChoiceChange({ ownerStatus: choice.value }, getNextStepFromChoice(choice));
       return;
     }
 
     if (choice.field === 'housingType') {
-      handleChoiceChange({ housingType: choice.value }, choice.value === 'apartment' ? 2 : 3);
+      handleChoiceChange({ housingType: choice.value }, getNextStepFromChoice(choice));
       return;
     }
 
     if (choice.field === 'heatingEquipment') {
-      handleChoiceChange({ heatingEquipment: choice.value }, choice.value === 'electric-radiator' ? 3 : 4);
+      handleChoiceChange({ heatingEquipment: choice.value }, getNextStepFromChoice(choice));
       return;
     }
 
-    handleChoiceChange({ dpe: choice.value }, 6);
+    handleChoiceChange({ dpe: choice.value }, getNextStepFromChoice(choice));
   };
 
   const handleFormChange = (changes: Partial<FormState>) => {
