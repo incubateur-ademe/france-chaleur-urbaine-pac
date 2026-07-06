@@ -133,14 +133,7 @@ export function App() {
       </div>
       {!isResultStep && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
       {currentStep === 0 && <HomeScreen onStart={() => setCurrentStep(1)} />}
-      {isResultStep && (
-        <ResultsPage
-          currentHeatingEquipment={formState.heatingEquipment}
-          isSubmitting={isSubmitting}
-          result={result}
-          onRestart={handleRestart}
-        />
-      )}
+      {isResultStep && <ResultsPage currentHeatingEquipment={formState.heatingEquipment} isSubmitting={isSubmitting} result={result} />}
       {currentStep > 0 && currentStep < RESULT_STEP && (
         <Questionnaire
           currentStep={currentStep}
@@ -159,9 +152,16 @@ export function App() {
         />
       )}
       {currentStep !== 0 && (
-        <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
-          Question précédente
-        </button>
+        <div className="fr-grid-row fr-grid-row--middle">
+          <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mr-3v" type="button" onClick={handleBack}>
+            Question précédente
+          </button>
+          {isResultStep && (
+            <button className="fr-btn fr-btn--tertiary" type="button" onClick={handleRestart}>
+              Recommencer
+            </button>
+          )}
+        </div>
       )}
       <ShareButtons url={shareUrl} />
     </main>

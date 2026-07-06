@@ -65,6 +65,18 @@ describe('App', () => {
     expect(screen.getByLabelText('Une maison individuelle')).toBeInTheDocument();
   });
 
+  it('shows a continue button when going back to an already answered choice step', () => {
+    window.history.replaceState(null, '', '/?step=3&situation=owner&housing=house');
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Question précédente' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    expect(window.location.search).toContain('step=3');
+    expect(screen.getByLabelText('Chaudière au gaz')).toBeInTheDocument();
+  });
+
   it('shows an inline recommendation and stops the journey for electric radiators', () => {
     window.history.replaceState(null, '', '/?step=3&housing=house&situation=owner');
     const scrollIntoView = vi.fn();
@@ -192,5 +204,42 @@ describe('App', () => {
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Voir mes résultats' })).toBeInTheDocument());
     expect(scrollIntoView).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows a single previous action and restart action on the results step', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/?step=9&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&postcode=64200&dpe=D&surface=100&occupants=2&incomeCategory=Modeste'
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        return new Response(
+          JSON.stringify({
+            gasBoilerAnnualBill: 1800,
+            heatingModeComparisons: [
+              { co2: 500, label: 'PAC air/eau', p1: 900 },
+              { co2: 2500, label: 'Chaudière gaz', p1: 1800 },
+              { co2: 3200, label: 'Chaudière fioul', p1: 2200 },
+            ],
+            heatPumpAnnualBill: 900,
+            heatPumpBoilerReplacementBonus: 4000,
+            heatPumpGrossPrice: 15000,
+            heatPumpMaprimerenovAid: 3000,
+            heatPumpNetPrice: 8000,
+            heatPumpProposedPower: 8,
+            oilBoilerAnnualBill: 2200,
+          })
+        );
+      }) satisfies typeof fetch
+    );
+
+    render(<App />);
+
+    expect(screen.getAllByRole('button', { name: 'Question précédente' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Recommencer' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Précédent' })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Vos résultats')).toBeInTheDocument());
   });
 });

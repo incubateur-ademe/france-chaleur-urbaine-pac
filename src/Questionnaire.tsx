@@ -83,7 +83,7 @@ export function Questionnaire({
   const isNextDisabled = getIsNextDisabled(currentStep, formState);
   const recommendationOutcome = getRecommendationOutcome(currentStep, routeOutcome);
   const completedStepSummaries = getCompletedStepSummaries(formState, currentStep);
-  const shouldShowStepAction = !recommendationOutcome && getShouldShowNextAction(currentStep);
+  const shouldShowStepAction = !recommendationOutcome && getShouldShowStepAction(currentStep, formState);
   const shouldShowResultAction = shouldShowStepAction && currentStep === TOTAL_STEPS && !isNextDisabled;
 
   useEffect(() => {
@@ -561,8 +561,10 @@ function getLocationSummary(selectedLocation: LocationSuggestion) {
   return selectedLocation.city ? `${selectedLocation.postcode} ${selectedLocation.city}` : selectedLocation.label;
 }
 
-function getShouldShowNextAction(currentStep: number) {
-  return STEP_CONFIGS[currentStep - 1]?.shouldShowNextAction === true;
+function getShouldShowStepAction(currentStep: number, formState: FormState) {
+  const stepConfig = STEP_CONFIGS[currentStep - 1];
+
+  return stepConfig ? stepConfig.shouldShowNextAction === true || stepConfig.getSummaryValue(formState) !== null : false;
 }
 
 function getRecommendationOutcome(currentStep: number, routeOutcome: RouteOutcome) {
