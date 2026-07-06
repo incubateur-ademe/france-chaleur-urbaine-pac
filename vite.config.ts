@@ -3,8 +3,7 @@ import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type PluginOption } from 'vite';
 
-const DSFR_VERSION = '1.13.1';
-const DSFR_CDN_BASE_URL = `https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@${DSFR_VERSION}/dist`;
+const DSFR_CDN_BASE_URL = `https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.1/dist`;
 const BUILD_MODES = {
   demo: {
     apiBaseUrl: 'https://france-chaleur-urbaine-dev-pr1255.osc-fr1.scalingo.io',
@@ -15,7 +14,7 @@ const BUILD_MODES = {
     hasDsfr: true,
   },
   prod: {
-    apiBaseUrl: 'https://france-chaleur-urbaine.beta.gouv.fr',
+    apiBaseUrl: 'https://france-chaleur-urbaine-dev-pr1255.osc-fr1.scalingo.io',
     hasDsfr: false,
   },
 } as const;
