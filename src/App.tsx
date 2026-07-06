@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import pacImageUrl from '@/assets/pac.webp';
+
 import { fetchHeatingSimulation, fetchIncomeOptions, searchMunicipalities } from './api';
 import { HomeScreen } from './HomeScreen';
 import { Questionnaire } from './Questionnaire';
@@ -128,7 +130,7 @@ export function App() {
         </div>
         {isResultStep && (
           <div className="fr-col-auto">
-            <img src="/pac.svg" width={101} height={100} alt="PAC air-eau" />
+            <img src={pacImageUrl} width={120} height={168} alt="PAC air-eau" />
           </div>
         )}
       </div>

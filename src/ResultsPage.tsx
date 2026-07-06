@@ -1,5 +1,8 @@
 import type React from 'react';
 
+import leafArtwork from '@/assets/artwork/pictograms/environment/leaf.svg?raw';
+import sunArtwork from '@/assets/artwork/pictograms/environment/sun.svg?raw';
+import franceRenovLogoUrl from '@/assets/france-renov-logo.svg';
 import { HOME_FEATURES } from '@/HomeScreen';
 import { Stepper } from '@/Questionnaire';
 
@@ -143,24 +146,22 @@ function SummaryCard({ description, label, suffix, value, variant }: SummaryCard
 
 function getSummaryCardIcon(variant: SummaryCardProps['variant']) {
   if (variant === 'co2') {
-    return <SummaryCardPictogram href="/artwork/pictograms/environment/leaf.svg" />;
+    return <SummaryCardPictogram svgContent={leafArtwork} />;
   }
 
   if (variant === 'power') {
-    return <SummaryCardPictogram href="/artwork/pictograms/environment/sun.svg" />;
+    return <SummaryCardPictogram svgContent={sunArtwork} />;
   }
 
   return null;
 }
 
-function SummaryCardPictogram({ href }: { href: string }) {
-  return (
-    <svg className="fr-artwork summary-card-picto" aria-hidden="true" viewBox="0 0 80 80">
-      <use className="fr-artwork-decorative" href={`${href}#artwork-decorative`} />
-      <use className="fr-artwork-minor" href={`${href}#artwork-minor`} />
-      <use className="fr-artwork-major" href={`${href}#artwork-major`} />
-    </svg>
-  );
+type SummaryCardPictogramProps = {
+  svgContent: string;
+};
+
+function SummaryCardPictogram({ svgContent }: SummaryCardPictogramProps) {
+  return <span className="fr-artwork summary-card-picto" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgContent }} />;
 }
 
 function AdvisorCallout() {
@@ -175,7 +176,7 @@ function AdvisorCallout() {
           Trouver un conseiller France Rénov’
         </a>
       </div>
-      <img className="advisor-logo" src="/france-renov-logo.svg" alt="France Rénov’" />
+      <img className="advisor-logo" src={franceRenovLogoUrl} alt="France Rénov’" />
     </aside>
   );
 }

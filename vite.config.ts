@@ -25,6 +25,9 @@ export default defineConfig(({ mode }) => {
   const buildConfig = BUILD_MODES[buildMode];
 
   return {
+    build: {
+      assetsInlineLimit: 20 * 1024,
+    },
     define: {
       'import.meta.env.VITE_FCU_API_BASE_URL': JSON.stringify(buildConfig.apiBaseUrl),
     },
