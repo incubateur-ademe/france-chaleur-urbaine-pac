@@ -227,7 +227,7 @@ describe('App', () => {
             heatPumpBoilerReplacementBonus: 4000,
             heatPumpGrossPrice: 15000,
             heatPumpMaprimerenovAid: 3000,
-            heatPumpNetPrice: 8000,
+            heatPumpNetPrice: 12000,
             heatPumpProposedPower: 8,
             oilBoilerAnnualBill: 2200,
           })
@@ -241,5 +241,6 @@ describe('App', () => {
     expect(screen.getAllByRole('button', { name: 'Recommencer' })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: 'Précédent' })).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Vos résultats')).toBeInTheDocument());
+    expect(screen.getAllByText(/7\s000 à 9\s000 €/)).toHaveLength(3);
   });
 });

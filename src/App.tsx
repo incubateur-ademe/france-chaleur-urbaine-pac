@@ -134,7 +134,14 @@ export function App() {
       </div>
       {!isResultStep && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
       {currentStep === 0 && <HomeScreen onStart={() => setCurrentStep(1)} />}
-      {isResultStep && <ResultsPage currentHeatingEquipment={formState.heatingEquipment} isSubmitting={isSubmitting} result={result} />}
+      {isResultStep && (
+        <ResultsPage
+          currentHeatingEquipment={formState.heatingEquipment}
+          isSubmitting={isSubmitting}
+          result={result}
+          surface={formState.surface}
+        />
+      )}
       {currentStep > 0 && currentStep < RESULT_STEP && (
         <Questionnaire
           currentStep={currentStep}

@@ -2,8 +2,8 @@ export const HOME_FEATURES = [
   {
     description: (
       <>
-        <strong>Les informations présentées sont des estimations</strong> et peuvent varier en fonction des caractéristiques des logement et
-        des équipements.
+        <strong>Les informations présentées sont des estimations</strong> et peuvent varier en fonction des caractéristiques des logements
+        et des équipements.
       </>
     ),
     iconClassName: 'fr-icon-pie-chart-box-fill',
@@ -54,8 +54,13 @@ export function HomeScreen({ onStart }: { onStart: () => void }) {
         Démarrer la simulation
       </button>
       <p className="fr-mt-3v">
-        Vous pouvez accéder à un simulateur plus détaillé sur{' '}
-        <a href="https://france-chaleur-urbaine.beta.gouv.fr/" className="fr-link" target="_blank" rel="noreferrer">
+         Pour accéder à un simulateur de solutions de chauffage économiques et durables, plus exhaustif, rendez-vous sur{' '}
+        <a
+          href="https://france-chaleur-urbaine.beta.gouv.fr/comparateur-couts-performances?utm=electrifionslafrance"
+          className="fr-link"
+          target="_blank"
+          rel="noreferrer"
+        >
           France Chaleur Urbaine
         </a>
         .

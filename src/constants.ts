@@ -9,8 +9,8 @@ import {
   type RouteOutcome,
 } from './types';
 
-export const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/';
-export const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable';
+export const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/?utm_source=electrifionslafrance';
+export const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable?utm_source=electrifionslafrance';
 
 export const RECOMMENDATIONS = {
   apartment: {

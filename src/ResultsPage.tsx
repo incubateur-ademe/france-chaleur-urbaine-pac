@@ -11,18 +11,27 @@ type ResultsPageProps = {
   currentHeatingEquipment: HeatingEquipment | null;
   isSubmitting: boolean;
   result: SimulationResult | null;
+  surface: string;
 };
 
-export function ResultsPage({ currentHeatingEquipment, isSubmitting, result }: ResultsPageProps) {
+export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, surface }: ResultsPageProps) {
   return (
     <section className="step-content" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
-      {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} />}
+      {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} surface={surface} />}
     </section>
   );
 }
 
-function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment: HeatingEquipment | null; result: SimulationResult }) {
+function Results({
+  currentHeatingEquipment,
+  result,
+  surface,
+}: {
+  currentHeatingEquipment: HeatingEquipment | null;
+  result: SimulationResult;
+  surface: string;
+}) {
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
   const maxAnnualBill = Math.max(...annualBillRows.map((annualBillRow) => annualBillRow.amount), 1);
   const boilerAverageAnnualBill = (result.gasBoilerAnnualBill + result.oilBoilerAnnualBill) / 2;
@@ -33,23 +42,24 @@ function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment:
     .sort((firstComparison, secondComparison) => secondComparison.co2 - firstComparison.co2)[0];
   const avoidedCo2 =
     heatPumpComparison && boilerComparisonWithHighestCo2 ? Math.max(boilerComparisonWithHighestCo2.co2 - heatPumpComparison.co2, 0) : 0;
+  const heatPumpNetPrice = getHeatPumpNetPrice(result);
 
   return (
     <section className="simulation-summary">
       <Stepper currentStep={8} />
       <p className="fr-text--lg fr-mb-0">
         En remplaçant votre <strong>chaudière à gaz</strong> par une <strong>pompe à chaleur air/eau</strong>, veuillez-trouver-ci dessous
-        les gains économiques et écologiques pour une maison individuelle de 100 m2.
+        les gains économiques et écologiques pour une maison individuelle de {surface} m².
       </p>
-      <ResultSummaryGrid result={result} annualSavings={annualSavings} avoidedCo2={avoidedCo2} />
+      <ResultSummaryGrid result={result} annualSavings={annualSavings} avoidedCo2={avoidedCo2} heatPumpNetPrice={heatPumpNetPrice} />
       <AdvisorCallout />
-      <CostAndAidDetails result={result} />
+      <CostAndAidDetails result={result} heatPumpNetPrice={heatPumpNetPrice} />
       <AnnualBillsChart annualBillRows={annualBillRows} maxAnnualBill={maxAnnualBill} />
       <FifteenYearComparison
         annualSavings={annualSavings}
         boilerAnnualBill={boilerAverageAnnualBill}
         heatPumpAnnualBill={result.heatPumpAnnualBill}
-        heatPumpNetPrice={result.heatPumpNetPrice}
+        heatPumpNetPrice={heatPumpNetPrice}
       />
       <AdvisorCallout />
       <MethodNotes />
@@ -57,13 +67,23 @@ function Results({ currentHeatingEquipment, result }: { currentHeatingEquipment:
   );
 }
 
-function ResultSummaryGrid({ annualSavings, avoidedCo2, result }: { annualSavings: number; avoidedCo2: number; result: SimulationResult }) {
+function ResultSummaryGrid({
+  annualSavings,
+  avoidedCo2,
+  heatPumpNetPrice,
+  result,
+}: {
+  annualSavings: number;
+  avoidedCo2: number;
+  heatPumpNetPrice: number;
+  result: SimulationResult;
+}) {
   return (
     <div className="summary-grid">
       <SummaryCard
         description={`sur un prix de la PAC air/eau moyen entre ${formatCurrencyRange(result.heatPumpGrossPrice, 1000)}`}
         label="Coût d’installation (aides déduites)"
-        value={formatCurrencyRange(result.heatPumpNetPrice, 500)}
+        value={formatCurrencyRange(heatPumpNetPrice, 1000)}
         variant="primary"
       />
       <SummaryCard
@@ -160,7 +180,7 @@ function AdvisorCallout() {
   );
 }
 
-function CostAndAidDetails({ result }: { result: SimulationResult }) {
+function CostAndAidDetails({ heatPumpNetPrice, result }: { heatPumpNetPrice: number; result: SimulationResult }) {
   const costRows = [
     {
       label: "Prix moyen d'une PAC air/eau (coût d'installation)",
@@ -180,7 +200,7 @@ function CostAndAidDetails({ result }: { result: SimulationResult }) {
     {
       label: 'Reste à charge estimé',
       rowClassName: 'cost-row-total fr-text--bold',
-      value: formatCurrencyRange(result.heatPumpNetPrice, 1000),
+      value: formatCurrencyRange(heatPumpNetPrice, 1000),
       valueClassName: 'cost-total',
     },
   ] satisfies CostRow[];
@@ -296,7 +316,7 @@ function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnual
         <div className="comparison-row">
           <span>Coût d’installation</span>
           <span>≈ {formatCurrency(BOILER_REPLACEMENT_PRICE)}</span>
-          <span className="comparison-pac-cell">{formatCurrency(heatPumpNetPrice)}</span>
+          <span className="comparison-pac-cell">{formatCurrencyRange(heatPumpNetPrice, 1000)}</span>
         </div>
         <div className="comparison-row">
           <span className="fr-text--start">Facture annuelle</span>
@@ -313,8 +333,8 @@ function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnual
       </div>
       <div className="fr-callout fr-callout--green-emeraude" style={{ backgroundColor: '#F8FAFF' }}>
         <p>
-          À budget comparable, <b>la pompe à chaleur revient moins cher</b> dès la première année. Au bout de 15 ans, vous auriez dépensé
-          environ <strong className="fr-text-default--success">{formatCurrency(annualSavings)} de moins</strong> qu’avec une nouvelle
+          À budget comparable, <b>la pompe à chaleur revient moins cher</b> dès la première année. Au bout de 15 ans, vous aurez dépensé
+          environ <strong className="fr-text-default--success">{formatCurrency(annualSavings * 15)} de moins</strong> qu’avec une nouvelle
           chaudière.
         </p>
       </div>
@@ -388,6 +408,10 @@ function getCurrentHeatingMode(result: SimulationResult, currentHeatingEquipment
 
 function getComparisonCo2(comparisons: HeatingModeComparison[], label: string) {
   return comparisons.find((comparison) => comparison.label === label)?.co2 ?? 0;
+}
+
+function getHeatPumpNetPrice(result: SimulationResult) {
+  return result.heatPumpGrossPrice - result.heatPumpMaprimerenovAid - result.heatPumpBoilerReplacementBonus;
 }
 
 function formatCurrency(value: number) {
