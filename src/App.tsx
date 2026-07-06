@@ -118,9 +118,6 @@ export function App() {
   const isResultStep = currentStep === RESULT_STEP;
   return (
     <main className="simulator-pac">
-      <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
-        Retour
-      </button>
       <div className={isResultStep ? 'fr-grid-row fr-grid-row--middle fr-grid-row--gutters' : ''}>
         <div className={isResultStep ? 'fr-col' : ''}>
           <h1 className="fr-h3">
@@ -162,6 +159,9 @@ export function App() {
           onLocationSelect={handleLocationSelect}
         />
       )}
+      <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
+        Question précédente
+      </button>
       <ShareButtons url={shareUrl} />
     </main>
   );
