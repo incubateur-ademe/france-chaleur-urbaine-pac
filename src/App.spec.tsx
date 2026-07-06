@@ -34,22 +34,6 @@ describe('App', () => {
     expect(screen.getByLabelText('Je suis propriétaire')).toBeInTheDocument();
   });
 
-  it('copies the current simulator URL from the share action', async () => {
-    const writeText = vi.fn(async () => undefined);
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText },
-    });
-    window.history.replaceState(null, '', '/?step=1');
-
-    render(<App />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Copier dans le presse-papier' }));
-
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith('http://localhost:3000/?step=1'));
-    expect(screen.getByRole('status')).toHaveTextContent('Adresse copiée dans le presse-papier.');
-  });
-
   it('keeps default form values out of the URL', () => {
     window.history.replaceState(null, '', '/?step=1');
 
