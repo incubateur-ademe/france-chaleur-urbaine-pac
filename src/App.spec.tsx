@@ -16,6 +16,11 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: /Pompe à chaleur air\/eau/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Démarrer la simulation' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Partager par email' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('mailto:?subject=Simulation%20pompe%20%C3%A0%20chaleur%20air%2Feau')
+    );
+    expect(screen.getByRole('button', { name: 'Copier dans le presse-papier' })).toBeInTheDocument();
     expect(window.location.search).toBe('');
   });
 
@@ -27,6 +32,22 @@ describe('App', () => {
     expect(window.location.search).toBe('?step=1');
     expect(screen.getByText(/Êtes-vous propriétaire/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Je suis propriétaire')).toBeInTheDocument();
+  });
+
+  it('copies the current simulator URL from the share action', async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    window.history.replaceState(null, '', '/?step=1');
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copier dans le presse-papier' }));
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith('http://localhost:3000/?step=1'));
+    expect(screen.getByRole('status')).toHaveTextContent('Adresse copiée dans le presse-papier.');
   });
 
   it('keeps default form values out of the URL', () => {

@@ -12,6 +12,7 @@ import {
   RESULT_STEP,
 } from './questionnaire';
 import { ResultsPage } from './ResultsPage';
+import { ShareButtons } from './ShareButtons';
 import type { FormState, IncomeOption, LocationSuggestion, QuestionnaireChoice, SimulationFormState, SimulationResult } from './types';
 
 export function App() {
@@ -24,14 +25,17 @@ export function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const routeOutcome = getRouteOutcome(formState);
-
-  useEffect(() => {
+  const currentPathWithSearch = useMemo(() => {
     const searchParams = getSearchParams(formState, currentStep);
     const serializedSearchParams = searchParams.toString();
-    const url = serializedSearchParams ? `${window.location.pathname}?${serializedSearchParams}` : window.location.pathname;
 
-    window.history.replaceState(null, '', url);
+    return serializedSearchParams ? `${window.location.pathname}?${serializedSearchParams}` : window.location.pathname;
   }, [currentStep, formState]);
+  const shareUrl = useMemo(() => `${window.location.origin}${currentPathWithSearch}`, [currentPathWithSearch]);
+
+  useEffect(() => {
+    window.history.replaceState(null, '', currentPathWithSearch);
+  }, [currentPathWithSearch]);
 
   useEffect(() => {
     if (currentStep !== RESULT_STEP || routeOutcome !== 'continue' || result || isSubmitting) {
@@ -158,6 +162,7 @@ export function App() {
           onLocationSelect={handleLocationSelect}
         />
       )}
+      <ShareButtons url={shareUrl} />
     </main>
   );
 }
