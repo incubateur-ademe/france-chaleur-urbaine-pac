@@ -126,7 +126,7 @@ export function App() {
         </div>
         {isResultStep && (
           <div className="fr-col-auto">
-            <img src="/pac.png" width={92} height={100} alt="PAC air-eau" />
+            <img src="/pac.svg" width={101} height={100} alt="PAC air-eau" />
           </div>
         )}
       </div>
