@@ -54,12 +54,12 @@ describe('App', () => {
     expect(screen.getByLabelText('Une maison individuelle')).toBeInTheDocument();
   });
 
-  it('goes back to the previous questionnaire step from the header button', () => {
+  it('goes back to the previous questionnaire step from the back button', () => {
     window.history.replaceState(null, '', '/?step=3&situation=owner&housing=house');
 
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Question précédente' }));
 
     expect(window.location.search).toContain('step=2');
     expect(screen.getByLabelText('Une maison individuelle')).toBeInTheDocument();

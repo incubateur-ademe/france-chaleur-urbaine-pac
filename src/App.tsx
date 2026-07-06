@@ -138,7 +138,6 @@ export function App() {
           currentHeatingEquipment={formState.heatingEquipment}
           isSubmitting={isSubmitting}
           result={result}
-          onPrevious={() => handleStep('previous')}
           onRestart={handleRestart}
         />
       )}

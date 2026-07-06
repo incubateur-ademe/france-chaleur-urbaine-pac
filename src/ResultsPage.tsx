@@ -11,19 +11,15 @@ type ResultsPageProps = {
   currentHeatingEquipment: HeatingEquipment | null;
   isSubmitting: boolean;
   result: SimulationResult | null;
-  onPrevious: () => void;
   onRestart: () => void;
 };
 
-export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, onPrevious, onRestart }: ResultsPageProps) {
+export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, onRestart }: ResultsPageProps) {
   return (
     <section className="step-content result-panel" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
       {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} />}
       <div className="step-actions fr-mt-5v">
-        <button className="fr-btn fr-btn--secondary" type="button" onClick={onPrevious}>
-          Précédent
-        </button>
         <button className="fr-btn fr-btn--tertiary" type="button" onClick={onRestart}>
           Recommencer
         </button>
