@@ -159,9 +159,11 @@ export function App() {
           onLocationSelect={handleLocationSelect}
         />
       )}
-      <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
-        Question précédente
-      </button>
+      {currentStep !== 0 && (
+        <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mb-3v" type="button" onClick={handleBack}>
+          Question précédente
+        </button>
+      )}
       <ShareButtons url={shareUrl} />
     </main>
   );
