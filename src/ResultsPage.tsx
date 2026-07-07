@@ -416,6 +416,9 @@ function AnnualBillsChart({ annualBillRows, maxAnnualBill }: { annualBillRows: A
         </div>
         <p className="annual-bills-caption">factures /an + CO² émis /an</p>
       </div>
+      <p className="fr-text--sm">
+        La facture des énergies fossiles est soumise aux aléas géopolitiques ce qui est moins le cas de l'électricité
+      </p>
     </section>
   );
 }
@@ -463,9 +466,9 @@ function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnual
       </div>
       <div className="fr-callout fr-callout--green-emeraude" style={{ backgroundColor: '#F8FAFF' }}>
         <p>
-          À budget comparable, <b>la pompe à chaleur revient moins cher</b> dès la première année. Au bout de 15 ans, vous aurez dépensé
-          environ <strong className="fr-text-default--success">{formatCurrency(annualSavings * 15)} de moins</strong> qu’avec une nouvelle
-          chaudière.
+          <strong>la pompe à chaleur revient moins cher</strong> dès la première année. Au bout de 15 ans, vous aurez dépensé environ{' '}
+          <strong className="fr-text-default--success">{formatCurrency(annualSavings * 15)} de moins</strong> sur vos factures qu’avec une
+          nouvelle chaudière.
         </p>
       </div>
     </section>
