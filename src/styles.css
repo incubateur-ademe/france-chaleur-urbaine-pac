@@ -323,27 +323,6 @@
   background: #fff6d8;
 }
 
-.advisor-callout h3,
-.advisor-callout p {
-  margin: 0 0 0.85rem;
-}
-
-.advisor-callout h3 {
-  color: #3a3a3a;
-  font-size: 1.55rem;
-}
-
-.advisor-callout .fr-btn {
-  background: var(--background-action-high-blue-france);
-}
-
-.advisor-contact {
-  display: grid;
-  gap: 0.35rem;
-  margin-bottom: 1rem;
-  font-style: normal;
-}
-
 .advisor-logo {
   width: 11rem;
   max-width: 100%;
@@ -602,10 +581,6 @@
   .summary-card-power strong {
     grid-column: 2;
     justify-self: start;
-  }
-
-  .advisor-callout {
-    grid-template-columns: 1fr;
   }
 
   .advisor-logo {
