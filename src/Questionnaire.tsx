@@ -286,7 +286,7 @@ export function CompletedStepCard({
 }: {
   summary: CompletedStepSummary;
   onEditStep: (step: number) => void;
-  layout: 'default' | 'condensed';
+  layout?: 'default' | 'condensed';
 }) {
   const isCondensed = layout === 'condensed';
 
