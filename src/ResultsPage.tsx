@@ -6,32 +6,53 @@ import franceRenovLogoUrl from '@/assets/france-renov-logo.svg';
 import { HOME_FEATURES } from '@/HomeScreen';
 import { Stepper } from '@/Questionnaire';
 
-import type { HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
+import type { FranceRenovSpace, HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
 
 const BOILER_REPLACEMENT_PRICE = 5000;
 
 type ResultsPageProps = {
   currentHeatingEquipment: HeatingEquipment | null;
+  franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceLoading: boolean;
   isSubmitting: boolean;
   result: SimulationResult | null;
   surface: string;
 };
 
-export function ResultsPage({ currentHeatingEquipment, isSubmitting, result, surface }: ResultsPageProps) {
+export function ResultsPage({
+  currentHeatingEquipment,
+  franceRenovSpace,
+  isFranceRenovSpaceLoading,
+  isSubmitting,
+  result,
+  surface,
+}: ResultsPageProps) {
   return (
     <section className="step-content" aria-labelledby="step-title">
       {isSubmitting && <p className="fr-text--lead">Calcul en cours…</p>}
-      {result && <Results currentHeatingEquipment={currentHeatingEquipment} result={result} surface={surface} />}
+      {result && (
+        <Results
+          currentHeatingEquipment={currentHeatingEquipment}
+          franceRenovSpace={franceRenovSpace}
+          isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
+          result={result}
+          surface={surface}
+        />
+      )}
     </section>
   );
 }
 
 function Results({
   currentHeatingEquipment,
+  franceRenovSpace,
+  isFranceRenovSpaceLoading,
   result,
   surface,
 }: {
   currentHeatingEquipment: HeatingEquipment | null;
+  franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceLoading: boolean;
   result: SimulationResult;
   surface: string;
 }) {
@@ -55,7 +76,7 @@ function Results({
         les gains économiques et écologiques pour une maison individuelle de {surface} m².
       </p>
       <ResultSummaryGrid result={result} annualSavings={annualSavings} avoidedCo2={avoidedCo2} heatPumpNetPrice={heatPumpNetPrice} />
-      <AdvisorCallout />
+      <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
       <CostAndAidDetails result={result} heatPumpNetPrice={heatPumpNetPrice} />
       <AnnualBillsChart annualBillRows={annualBillRows} maxAnnualBill={maxAnnualBill} />
       <FifteenYearComparison
@@ -64,7 +85,7 @@ function Results({
         heatPumpAnnualBill={result.heatPumpAnnualBill}
         heatPumpNetPrice={heatPumpNetPrice}
       />
-      <AdvisorCallout />
+      <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
       <MethodNotes />
     </section>
   );
@@ -164,20 +185,70 @@ function SummaryCardPictogram({ svgContent }: SummaryCardPictogramProps) {
   return <span className="fr-artwork summary-card-picto" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgContent }} />;
 }
 
-function AdvisorCallout() {
+type AdvisorCalloutProps = {
+  franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceLoading: boolean;
+};
+
+function AdvisorCallout({ franceRenovSpace, isFranceRenovSpaceLoading }: AdvisorCalloutProps) {
   return (
     <aside className="advisor-callout" aria-label="Accompagnement France Rénov’">
       <div>
         <h3>Vous souhaitez aller plus loin ?</h3>
+        {isFranceRenovSpaceLoading ? (
+          <p>Recherche du conseiller France Rénov’ de votre commune…</p>
+        ) : (
+          <AdvisorDetails franceRenovSpace={franceRenovSpace} />
+        )}
+      </div>
+      <img className="advisor-logo" src={franceRenovLogoUrl} alt="France Rénov’" />
+    </aside>
+  );
+}
+
+type AdvisorDetailsProps = {
+  franceRenovSpace: FranceRenovSpace | null;
+};
+
+function AdvisorDetails({ franceRenovSpace }: AdvisorDetailsProps) {
+  if (!franceRenovSpace) {
+    return (
+      <>
         <p>
           Un conseiller France Rénov’ vous accompagne <strong>gratuitement et en toute neutralité</strong>.
         </p>
         <a className="fr-btn fr-btn--lg" href="https://france-renov.gouv.fr/preparer-projet/trouver-conseiller">
           Trouver un conseiller France Rénov’
         </a>
-      </div>
-      <img className="advisor-logo" src={franceRenovLogoUrl} alt="France Rénov’" />
-    </aside>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <p>
+        Votre espace France Rénov’ : <strong>{franceRenovSpace.name}</strong>
+      </p>
+      <address className="advisor-contact">
+        <span>
+          {franceRenovSpace.address}, {franceRenovSpace.zipcode} {franceRenovSpace.city}
+        </span>
+        <a href={`tel:${franceRenovSpace.phone}`}>{formatPhoneNumber(franceRenovSpace.phone)}</a>
+        {franceRenovSpace.secondaryPhone && (
+          <a href={`tel:${franceRenovSpace.secondaryPhone}`}>{formatPhoneNumber(franceRenovSpace.secondaryPhone)}</a>
+        )}
+        <a href={`mailto:${franceRenovSpace.email}`}>{franceRenovSpace.email}</a>
+      </address>
+      {franceRenovSpace.website ? (
+        <a className="fr-btn fr-btn--lg" href={getExternalUrl(franceRenovSpace.website)} target="_blank" rel="noopener">
+          Contacter mon conseiller France Rénov’
+        </a>
+      ) : (
+        <a className="fr-btn fr-btn--lg" href={`mailto:${franceRenovSpace.email}`}>
+          Contacter mon conseiller France Rénov’
+        </a>
+      )}
+    </>
   );
 }
 
@@ -454,6 +525,14 @@ function formatAmount(value: number) {
   return new Intl.NumberFormat('fr-FR', {
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function formatPhoneNumber(phoneNumber: string) {
+  return phoneNumber.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
+}
+
+function getExternalUrl(url: string) {
+  return url.startsWith('http') ? url : `https://${url}`;
 }
 
 function roundToNearest(value: number, step: number) {

@@ -173,6 +173,7 @@ describe('App', () => {
     const searchParams = new URLSearchParams(window.location.search);
 
     expect(searchParams.get('postcode')).toBe('64200');
+    expect(searchParams.get('citycode')).toBe('64122');
     expect(searchParams.get('departmentCode')).toBeNull();
     expect(screen.getByText('Commune sélectionnée : 64200 Biarritz')).toBeInTheDocument();
   });
@@ -210,11 +211,30 @@ describe('App', () => {
     window.history.replaceState(
       null,
       '',
-      '/?step=9&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&postcode=64200&dpe=D&surface=100&occupants=2&incomeCategory=Modeste'
+      '/?step=9&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&postcode=64200&citycode=64122&dpe=D&surface=100&occupants=2&incomeCategory=Modeste'
     );
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => {
+      vi.fn(async (input: string | URL | Request) => {
+        if (String(input).includes('tabular-api.data.gouv.fr')) {
+          return new Response(
+            JSON.stringify({
+              data: [
+                {
+                  'Adresse Structure': '15 avenue de Verdun',
+                  'Code Postal Structure': '64100',
+                  'Commune Structure': 'BAYONNE',
+                  'Email Structure': 'contact@example.fr',
+                  'Nom Structure': 'Espace Conseil France Rénov’ Pays Basque',
+                  'Site Internet Structure': 'www.example.fr',
+                  'Telephone 2 Structure': null,
+                  'Telephone Structure': '0559000000',
+                },
+              ],
+            })
+          );
+        }
+
         return new Response(
           JSON.stringify({
             gasBoilerAnnualBill: 1800,
@@ -241,6 +261,8 @@ describe('App', () => {
     expect(screen.getAllByRole('button', { name: 'Recommencer' })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: 'Précédent' })).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Vos résultats')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText('Espace Conseil France Rénov’ Pays Basque')).toHaveLength(2));
+    expect(screen.getAllByRole('link', { name: '05 59 00 00 00' })).toHaveLength(2);
     expect(screen.getAllByText(/7\s000 à 9\s000 €/)).toHaveLength(3);
   });
 });

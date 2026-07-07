@@ -317,6 +317,13 @@
   background: var(--background-action-high-blue-france);
 }
 
+.advisor-contact {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  font-style: normal;
+}
+
 .advisor-logo {
   width: 11rem;
   max-width: 100%;

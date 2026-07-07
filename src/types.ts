@@ -20,9 +20,21 @@ export type QuestionnaireChoice =
 
 export type LocationSuggestion = {
   city: string;
+  citycode: string;
   departmentCode: string;
   label: string;
   postcode: string;
+};
+
+export type FranceRenovSpace = {
+  address: string;
+  city: string;
+  email: string;
+  name: string;
+  phone: string;
+  secondaryPhone: string | null;
+  website: string | null;
+  zipcode: string;
 };
 
 export type HeatingModeComparison = {

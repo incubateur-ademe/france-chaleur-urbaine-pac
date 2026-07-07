@@ -64,6 +64,7 @@ export function getSearchParams(formState: FormState, currentStep: number) {
   setSearchParamUnlessDefault(searchParams, 'surface', formState.surface, INITIAL_FORM_STATE.surface);
   setSearchParam(searchParams, 'incomeCategory', formState.incomeCategory);
   setSearchParam(searchParams, 'postcode', formState.selectedLocation?.postcode || null);
+  setSearchParam(searchParams, 'citycode', formState.selectedLocation?.citycode || null);
 
   return searchParams;
 }
@@ -128,6 +129,7 @@ function getInitialSelectedLocation(searchParams: URLSearchParams) {
 
   return {
     city: searchParams.get('city') ?? '',
+    citycode: searchParams.get('citycode') ?? '',
     departmentCode: postcode.slice(0, 2),
     label,
     postcode,

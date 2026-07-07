@@ -18,7 +18,7 @@ export const RECOMMENDATIONS = {
     descriptionAfterLink: 'pour découvrir le système de chauffage économique et écologique le plus adapté à votre bâtiment.',
     descriptionBeforeLink: 'Mais pas de panique, rendez-vous sur le service public',
     linkLabel: 'France Chaleur Urbaine',
-    title: 'Oups, ce simulateur est conçu pour les maisons individuelles !',
+    title: 'Ce simulateur est conçu pour les maisons individuelles !',
     url: FCU_URL,
   },
   'electric-radiator': {
@@ -35,7 +35,7 @@ export const RECOMMENDATIONS = {
     descriptionBeforeLink:
       'Mais il existe de nombreuses autres solutions pour faire des économies énergies. Notre partenaire de confiance peut vous guider : rendez-vous sur',
     linkLabel: 'Watt watchers',
-    title: "Oups, le remplacement d'une chaudière par une pompe à chaleur dépend de votre propriétaire !",
+    title: "Le remplacement d'une chaudière par une pompe à chaleur dépend de votre propriétaire !",
     url: WATTWATCHERS_URL,
   },
 } satisfies Record<

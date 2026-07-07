@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import pacImageUrl from '@/assets/pac.webp';
 
-import { fetchHeatingSimulation, fetchIncomeOptions, searchMunicipalities } from './api';
+import { fetchFranceRenovSpace, fetchHeatingSimulation, fetchIncomeOptions, searchMunicipalities } from './api';
 import { HomeScreen } from './HomeScreen';
 import { Questionnaire } from './Questionnaire';
 import {
@@ -16,7 +16,15 @@ import {
 } from './questionnaire';
 import { ResultsPage } from './ResultsPage';
 import { ShareButtons } from './ShareButtons';
-import type { FormState, IncomeOption, LocationSuggestion, QuestionnaireChoice, SimulationFormState, SimulationResult } from './types';
+import type {
+  FormState,
+  FranceRenovSpace,
+  IncomeOption,
+  LocationSuggestion,
+  QuestionnaireChoice,
+  SimulationFormState,
+  SimulationResult,
+} from './types';
 
 export function App() {
   const initialState = useMemo(() => getInitialJourneyState(), []);
@@ -24,6 +32,7 @@ export function App() {
   const [formState, setFormState] = useState<FormState>(initialState.formState);
   const { clearLocationSuggestions, isLocationLoading, locationSuggestions } = useLocationSuggestions(formState);
   const { clearIncomeOptions, incomeOptions, isIncomeOptionsLoading } = useIncomeOptions(formState);
+  const { franceRenovSpace, isFranceRenovSpaceLoading } = useFranceRenovSpace(formState, currentStep);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -139,6 +148,8 @@ export function App() {
       {isResultStep && (
         <ResultsPage
           currentHeatingEquipment={formState.heatingEquipment}
+          franceRenovSpace={franceRenovSpace}
+          isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
           isSubmitting={isSubmitting}
           result={result}
           surface={formState.surface}
@@ -250,6 +261,43 @@ function useIncomeOptions(formState: FormState) {
   }, [formState.selectedLocation, occupants]);
 
   return { clearIncomeOptions, incomeOptions, isIncomeOptionsLoading };
+}
+
+function useFranceRenovSpace(formState: FormState, currentStep: number) {
+  const [franceRenovSpace, setFranceRenovSpace] = useState<FranceRenovSpace | null>(null);
+  const [isFranceRenovSpaceLoading, setIsFranceRenovSpaceLoading] = useState(false);
+  const citycode = formState.selectedLocation?.citycode ?? '';
+
+  useEffect(() => {
+    if (currentStep !== RESULT_STEP || !citycode) {
+      setFranceRenovSpace(null);
+      setIsFranceRenovSpaceLoading(false);
+      return;
+    }
+
+    const abortController = new AbortController();
+    setIsFranceRenovSpaceLoading(true);
+
+    fetchFranceRenovSpace(citycode, abortController.signal)
+      .then((space) => {
+        setFranceRenovSpace(space);
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        setFranceRenovSpace(null);
+      })
+      .finally(() => {
+        if (!abortController.signal.aborted) {
+          setIsFranceRenovSpaceLoading(false);
+        }
+      });
+
+    return () => abortController.abort();
+  }, [citycode, currentStep]);
+
+  return { franceRenovSpace, isFranceRenovSpaceLoading };
 }
 
 function isSimulationReady(formState: FormState): formState is SimulationFormState {
