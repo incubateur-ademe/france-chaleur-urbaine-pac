@@ -273,23 +273,57 @@ function renderActiveStep({
   );
 }
 
-type CompletedStepSummary = {
+export type CompletedStepSummary = {
   label: string;
   step: number;
   value: string;
 };
 
-function CompletedStepCard({ summary, onEditStep }: { summary: CompletedStepSummary; onEditStep: (step: number) => void }) {
+export function CompletedStepCard({
+  summary,
+  onEditStep,
+  layout,
+}: {
+  summary: CompletedStepSummary;
+  onEditStep: (step: number) => void;
+  layout: 'default' | 'condensed';
+}) {
+  const isCondensed = layout === 'condensed';
+
   return (
     <article className="question-card question-card-completed">
-      <span className="fr-icon-checkbox-circle-fill question-card-check" aria-hidden="true" />
-      <div>
-        <p className="fr-text-title--blue-france uppercase fr-mb-0 fr-text--sm">{summary.label}</p>
-        <p className="question-summary-value">{summary.value}</p>
-      </div>
-      <button className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline" type="button" onClick={() => onEditStep(summary.step)}>
-        Modifier
-      </button>
+      {!isCondensed && <span className="fr-icon-checkbox-circle-fill question-card-check" aria-hidden="true" />}
+      {isCondensed ? (
+        <div className="fr-grid-row fr-grid-row--middle">
+          <div className="fr-col">
+            <div className="fr-grid-row fr-grid-row--middle fr-grid-row--gutters">
+              <div className="fr-col-3">
+                <p className="fr-text-title--blue-france fr-text--sm fr-mb-0 uppercase">{summary.label}</p>
+              </div>
+              <div className="fr-col-auto">
+                <p className="question-summary-value fr-mb-0">{summary.value}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="fr-col-auto">
+            <button className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline" type="button" onClick={() => onEditStep(summary.step)}>
+              Modifier
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="fr-text-title--blue-france uppercase fr-mb-0 fr-text--sm">{summary.label}</p>
+            <p className="question-summary-value">{summary.value}</p>
+          </div>
+
+          <button className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline" type="button" onClick={() => onEditStep(summary.step)}>
+            Modifier
+          </button>
+        </>
+      )}
     </article>
   );
 }
@@ -482,7 +516,7 @@ function RecommendationCallout({ calloutRef, outcome }: RecommendationCalloutPro
   );
 }
 
-function getCompletedStepSummaries(formState: FormState, currentStep: number) {
+export function getCompletedStepSummaries(formState: FormState, currentStep: number) {
   const summaries: (CompletedStepSummary | null)[] = STEP_CONFIGS.map((stepConfig, stepIndex) => {
     const summaryValue = stepConfig.getSummaryValue(formState);
     const step = stepIndex + 1;

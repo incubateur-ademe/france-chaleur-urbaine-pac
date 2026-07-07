@@ -148,11 +148,13 @@ export function App() {
       {isResultStep && (
         <ResultsPage
           currentHeatingEquipment={formState.heatingEquipment}
+          formState={formState}
           franceRenovSpace={franceRenovSpace}
           isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
           isSubmitting={isSubmitting}
           result={result}
           surface={formState.surface}
+          onEditStep={handleEditStep}
         />
       )}
       {currentStep > 0 && currentStep < RESULT_STEP && (

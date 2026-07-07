@@ -4,28 +4,33 @@ import leafArtwork from '@/assets/artwork/pictograms/environment/leaf.svg?raw';
 import sunArtwork from '@/assets/artwork/pictograms/environment/sun.svg?raw';
 import franceRenovLogoUrl from '@/assets/france-renov-logo.svg';
 import { HOME_FEATURES } from '@/HomeScreen';
-import { Stepper } from '@/Questionnaire';
+import { CompletedStepCard, type CompletedStepSummary, getCompletedStepSummaries, Stepper } from '@/Questionnaire';
 
-import type { FranceRenovSpace, HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
+import { RESULT_STEP } from './questionnaire';
+import type { FormState, FranceRenovSpace, HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
 
 const BOILER_REPLACEMENT_PRICE = 5000;
 
 type ResultsPageProps = {
   currentHeatingEquipment: HeatingEquipment | null;
+  formState: FormState;
   franceRenovSpace: FranceRenovSpace | null;
   isFranceRenovSpaceLoading: boolean;
   isSubmitting: boolean;
   result: SimulationResult | null;
   surface: string;
+  onEditStep: (step: number) => void;
 };
 
 export function ResultsPage({
   currentHeatingEquipment,
+  formState,
   franceRenovSpace,
   isFranceRenovSpaceLoading,
   isSubmitting,
   result,
   surface,
+  onEditStep,
 }: ResultsPageProps) {
   return (
     <section className="step-content" aria-labelledby="step-title">
@@ -33,10 +38,12 @@ export function ResultsPage({
       {result && (
         <Results
           currentHeatingEquipment={currentHeatingEquipment}
+          formState={formState}
           franceRenovSpace={franceRenovSpace}
           isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
           result={result}
           surface={surface}
+          onEditStep={onEditStep}
         />
       )}
     </section>
@@ -45,18 +52,23 @@ export function ResultsPage({
 
 function Results({
   currentHeatingEquipment,
+  formState,
   franceRenovSpace,
   isFranceRenovSpaceLoading,
   result,
   surface,
+  onEditStep,
 }: {
   currentHeatingEquipment: HeatingEquipment | null;
+  formState: FormState;
   franceRenovSpace: FranceRenovSpace | null;
   isFranceRenovSpaceLoading: boolean;
   result: SimulationResult;
   surface: string;
+  onEditStep: (step: number) => void;
 }) {
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
+  const completedStepSummaries = getCompletedStepSummaries(formState, RESULT_STEP);
   const maxAnnualBill = Math.max(...annualBillRows.map((annualBillRow) => annualBillRow.amount), 1);
   const boilerAverageAnnualBill = (result.gasBoilerAnnualBill + result.oilBoilerAnnualBill) / 2;
   const annualSavings = Math.max(boilerAverageAnnualBill - result.heatPumpAnnualBill, 0);
@@ -71,6 +83,7 @@ function Results({
   return (
     <section className="simulation-summary">
       <Stepper currentStep={8} />
+      <ResultAnswersSummary summaries={completedStepSummaries} onEditStep={onEditStep} />
       <p className="fr-text--lg fr-mb-0">
         En remplaçant votre <strong>chaudière à gaz</strong> par une <strong>pompe à chaleur air/eau</strong>, veuillez-trouver-ci dessous
         les gains économiques et écologiques pour une maison individuelle de {surface} m².
@@ -87,6 +100,26 @@ function Results({
       />
       <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
       <MethodNotes />
+    </section>
+  );
+}
+
+type ResultAnswersSummaryProps = {
+  summaries: CompletedStepSummary[];
+  onEditStep: (step: number) => void;
+};
+
+function ResultAnswersSummary({ summaries, onEditStep }: ResultAnswersSummaryProps) {
+  return (
+    <section className="result-answers" aria-labelledby="result-answers-title">
+      <h2 className="fr-h6 fr-mb-0" id="result-answers-title">
+        Vos réponses
+      </h2>
+      <div className="result-answers-grid">
+        {summaries.map((summary) => (
+          <CompletedStepCard key={summary.step} summary={summary} onEditStep={onEditStep} layout="condensed" />
+        ))}
+      </div>
     </section>
   );
 }

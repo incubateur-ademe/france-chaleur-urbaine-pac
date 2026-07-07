@@ -35,6 +35,16 @@
   padding: 1rem;
 }
 
+.result-answers-grid .question-card-completed {
+  min-height: 1rem;
+  grid-template-columns: auto;
+  gap: 0rem;
+  padding: 0.1rem 0.5rem;
+}
+.result-answers-grid .question-card {
+  margin: 0;
+}
+
 .question-card-check {
   color: var(--text-default-success);
 }
@@ -176,6 +186,16 @@
   display: grid;
   width: 100%;
   gap: 2rem;
+}
+
+.result-answers {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.result-answers-grid {
+  display: grid;
+  gap: 0rem;
 }
 
 .summary-grid {
@@ -561,6 +581,7 @@
   }
 
   .summary-grid,
+  .result-answers-grid,
   .annual-bill-row,
   .comparison-row {
     grid-template-columns: 1fr;

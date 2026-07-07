@@ -261,6 +261,10 @@ describe('App', () => {
     expect(screen.getAllByRole('button', { name: 'Recommencer' })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: 'Précédent' })).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Vos résultats')).toBeInTheDocument());
+    expect(screen.getByRole('heading', { name: 'Vos réponses' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Modifier' })).toHaveLength(8);
+    expect(screen.getByText('Propriétaire')).toBeInTheDocument();
+    expect(screen.getByText('Classe D')).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText('Espace Conseil France Rénov’ Pays Basque')).toHaveLength(2));
     expect(screen.getAllByRole('link', { name: '05 59 00 00 00' })).toHaveLength(2);
     expect(screen.getAllByText(/7\s000 à 9\s000 €/)).toHaveLength(3);
