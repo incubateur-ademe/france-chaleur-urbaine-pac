@@ -30,8 +30,7 @@ export function getAvoidedCo2(comparisons: HeatingModeComparison[]) {
 }
 
 export function getHeatPumpNetPriceRange(result: SimulationResult) {
-  const roundedAidTotal = getRoundedAidTotal(result);
-
+  const roundedAidTotal = Math.round(result.heatPumpMaprimerenovAid) + roundToNearest(result.heatPumpBoilerReplacementBonus, 100);
   return {
     highValue: HEAT_PUMP_GROSS_PRICE_RANGE.highValue - roundedAidTotal,
     lowValue: HEAT_PUMP_GROSS_PRICE_RANGE.lowValue - roundedAidTotal,
@@ -47,10 +46,6 @@ export function getEstimatedPaybackYearRange(heatPumpNetPriceRange: CurrencyRang
     highValue: Math.round(heatPumpNetPriceRange.highValue / annualSavings),
     lowValue: Math.round(heatPumpNetPriceRange.lowValue / annualSavings),
   } satisfies CurrencyRange;
-}
-
-export function getRoundedAidTotal(result: SimulationResult) {
-  return Math.round(result.heatPumpMaprimerenovAid) + roundToNearest(result.heatPumpBoilerReplacementBonus, 100);
 }
 
 function getCurrentHeatingMode(result: SimulationResult, currentHeatingEquipment: HeatingEquipment | null): AnnualBillRow {
