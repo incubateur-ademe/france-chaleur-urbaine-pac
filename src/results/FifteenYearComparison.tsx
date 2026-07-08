@@ -55,9 +55,11 @@ export function FifteenYearComparison({
       </div>
       <div className="fr-callout fr-callout--green-emeraude" style={{ backgroundColor: '#F8FAFF' }}>
         <p>
-          <strong>La pompe à chaleur revient moins cher</strong> dès la première année. Au bout de 15 ans, vous aurez dépensé environ{' '}
-          <strong className="fr-text-default--success">{formatCurrency(roundToNearest(annualSavings, 10) * 15, 10)} de moins</strong> sur
-          vos factures qu’avec une nouvelle chaudière.
+          Au bout de 15 ans, vous aurez dépensé environ{' '}
+          <strong className="fr-text-default--success fr-text--lg">
+            {formatCurrency(roundToNearest(annualSavings, 10) * 15, 10)} de moins
+          </strong>{' '}
+          sur vos factures qu’avec une nouvelle chaudière.
         </p>
       </div>
     </section>
