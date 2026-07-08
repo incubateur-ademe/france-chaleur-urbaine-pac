@@ -16,7 +16,7 @@ export const RECOMMENDATIONS = {
   apartment: {
     ctaLabel: 'France Chaleur Urbaine',
     descriptionAfterLink: 'pour découvrir le système de chauffage économique et écologique le plus adapté à votre bâtiment.',
-    descriptionBeforeLink: 'Mais pas de panique, rendez-vous sur le service public',
+    descriptionBeforeLink: 'Mais rendez-vous sur le service public',
     linkLabel: 'France Chaleur Urbaine',
     title: 'Ce simulateur est conçu pour les maisons individuelles !',
     url: FCU_URL,
@@ -24,7 +24,7 @@ export const RECOMMENDATIONS = {
   'electric-radiator': {
     ctaLabel: 'sur Watt Watchers',
     descriptionAfterLink: '',
-    descriptionBeforeLink: 'Pas de panique, des solutions alternatives existent : pour les découvrir, rendez-vous sur',
+    descriptionBeforeLink: 'Des solutions alternatives existent : pour les découvrir, rendez-vous sur',
     linkLabel: 'Watt Watchers',
     title: 'Malheureusement, l’installation d’une PAC air/eau n’est pas recommandée dans votre maison.',
     url: WATTWATCHERS_URL,

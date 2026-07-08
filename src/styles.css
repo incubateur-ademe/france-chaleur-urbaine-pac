@@ -45,6 +45,10 @@
   margin: 0;
 }
 
+.completed-step-edit-icon {
+  display: none;
+}
+
 .question-card-check {
   color: var(--text-default-success);
 }
@@ -567,6 +571,77 @@
     grid-template-columns: 1fr;
   }
 
+  .result-answers-grid .question-card-completed-condensed {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .question-card-completed-condensed > .fr-grid-row {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .question-card-completed-condensed .fr-col {
+    min-width: 0;
+  }
+
+  .question-card-completed-condensed .fr-grid-row--gutters {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .question-card-completed-condensed .fr-grid-row--gutters > .fr-col-3,
+  .question-card-completed-condensed .fr-grid-row--gutters > .fr-col-auto {
+    flex: 0 1 auto;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .result-answers-grid .question-card-completed-condensed .fr-text-title--blue-france {
+    overflow: hidden;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .result-answers-grid .question-card-completed-condensed .question-summary-value {
+    overflow: hidden;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .completed-step-action {
+    flex: 0 0 auto;
+  }
+
+  .completed-step-edit-button {
+    width: 2rem;
+    min-height: 2rem;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .completed-step-edit-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .completed-step-edit-icon {
+    display: inline-flex;
+  }
+
   .summary-card,
   .summary-card-co2,
   .summary-card-power {
@@ -585,7 +660,25 @@
   }
 
   .advisor-logo {
+    grid-row: 1;
+    justify-self: center;
     width: 9.5rem;
+  }
+
+  .advisor-callout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem;
+    text-align: left;
+  }
+
+  .advisor-callout .fr-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .advisor-callout address {
+    overflow-wrap: anywhere;
   }
 
   .cost-row {
@@ -599,12 +692,102 @@
     text-align: left;
   }
 
-  .comparison-row > strong {
-    white-space: normal;
+  .comparison-table {
+    gap: 0.75rem;
+    border-top: 0;
   }
 
-  .comparison-table .comparison-row-saving > span {
+  .comparison-row {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-default-grey);
+    background: var(--background-default-grey);
+  }
+
+  .comparison-table .comparison-row > span {
+    min-height: auto;
+    padding: 0.75rem;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .comparison-row:first-child {
     display: none;
+  }
+
+  .comparison-row:not(:first-child, .comparison-row-saving) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .comparison-row:not(:first-child, .comparison-row-saving) > span:first-child {
+    grid-column: 1 / -1;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-default-grey);
+    color: var(--text-title-grey);
+    font-weight: 700;
+    background: var(--background-contrast-grey);
+  }
+
+  .comparison-row:not(:first-child, .comparison-row-saving) > span:nth-child(2),
+  .comparison-row:not(:first-child, .comparison-row-saving) > span:nth-child(3) {
+    display: grid;
+    align-content: center;
+    min-height: 4rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .comparison-row:not(:first-child, .comparison-row-saving) > span:nth-child(2) {
+    border-right: 1px solid var(--border-default-grey);
+  }
+
+  .comparison-row:not(:first-child, .comparison-row-saving) > span:nth-child(2)::before {
+    content: "Chaudière";
+    margin-bottom: 0.25rem;
+    color: var(--text-mention-grey);
+    font-size: 0.75rem;
+    font-weight: 400;
+  }
+
+  .comparison-row:not(:first-child, .comparison-row-saving) > span:nth-child(3)::before {
+    content: "Pompe à chaleur";
+    margin-bottom: 0.25rem;
+    color: var(--text-title-blue-france);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .comparison-pac-cell {
+    border-right: 0;
+    border-left: 0;
+    background: var(--background-default-grey);
+  }
+
+  .comparison-pac-cell-top {
+    border-top: 0;
+  }
+
+  .comparison-row-saving {
+    display: block;
+    border-color: var(--background-action-high-blue-france);
+  }
+
+  .comparison-table .comparison-row-saving > span:not(.comparison-pac-cell-bottom) {
+    display: none;
+  }
+
+  .comparison-table .comparison-row-saving > .comparison-pac-cell-bottom {
+    display: block;
+    border: 0;
+    font-size: 1rem;
+    text-align: right;
+  }
+
+  .comparison-pac-cell-bottom small {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-mention-grey);
+    font-size: 0.75rem;
+    line-height: 1.3;
   }
 
   .annual-bills-footer {

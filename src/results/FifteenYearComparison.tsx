@@ -24,8 +24,8 @@ export function FifteenYearComparison({
     <section className="result-section" aria-labelledby="fifteen-year-title">
       <SectionHeading iconClassName="fr-icon-scales-3-line" title="PAC ou nouvelle chaudière : le coût sur 15 ans" />
       <p>
-        Tôt ou tard, {currentHeatingEquipment === 'other' ? 'une' : 'votre'} chaudière devra être remplacée. À budget d’installation
-        comparable, voici ce que chaque choix vous coûte au fil des années, installation et factures cumulées.
+        Tôt ou tard, {currentHeatingEquipment === 'other' ? 'une' : 'votre'} chaudière devra être remplacée. Voici ce que chaque choix vous
+        coûte au fil des années, installation et factures cumulées.
       </p>
       <div className="comparison-table">
         <div className="comparison-row">
@@ -50,6 +50,7 @@ export function FifteenYearComparison({
           <span />
           <span className="comparison-pac-cell comparison-pac-cell-bottom">
             ≈ <strong className="fr-text--xl">{formatCurrency(annualSavings, 10)}</strong> / an d’économies annuelles
+            <small>avec l’installation d’une pompe à chaleur</small>
           </span>
         </div>
       </div>

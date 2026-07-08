@@ -292,7 +292,7 @@ export function CompletedStepCard({
   const isCondensed = layout === 'condensed';
 
   return (
-    <article className="question-card question-card-completed">
+    <article className={`question-card question-card-completed${isCondensed ? ' question-card-completed-condensed' : ''}`}>
       {!isCondensed && <span className="fr-icon-checkbox-circle-fill question-card-check" aria-hidden="true" />}
       {isCondensed ? (
         <div className="fr-grid-row fr-grid-row--middle">
@@ -307,9 +307,14 @@ export function CompletedStepCard({
             </div>
           </div>
 
-          <div className="fr-col-auto">
-            <button className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline" type="button" onClick={() => onEditStep(summary.step)}>
-              Modifier
+          <div className="fr-col-auto completed-step-action">
+            <button
+              className="fr-btn fr-btn--sm fr-btn--tertiary-no-outline completed-step-edit-button"
+              type="button"
+              onClick={() => onEditStep(summary.step)}
+            >
+              <span className="completed-step-edit-label">Modifier</span>
+              <span className="fr-icon-edit-fill completed-step-edit-icon" aria-hidden="true" />
             </button>
           </div>
         </div>
