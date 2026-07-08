@@ -6,7 +6,7 @@ import { defineConfig, type PluginOption } from 'vite';
 const DSFR_CDN_BASE_URL = `https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.13.1/dist`;
 const BUILD_MODES = {
   demo: {
-    apiBaseUrl: 'https://france-chaleur-urbaine-dev-pr1255.osc-fr1.scalingo.io',
+    apiBaseUrl: 'https://france-chaleur-urbaine.beta.gouv.fr',
     hasDsfr: true,
   },
   dev: {
@@ -14,7 +14,7 @@ const BUILD_MODES = {
     hasDsfr: true,
   },
   prod: {
-    apiBaseUrl: 'https://france-chaleur-urbaine-dev-pr1255.osc-fr1.scalingo.io',
+    apiBaseUrl: 'https://france-chaleur-urbaine.beta.gouv.fr',
     hasDsfr: false,
   },
 } as const;
