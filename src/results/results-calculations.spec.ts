@@ -8,7 +8,7 @@ const SIMULATION_RESULT = {
   gasBoilerAnnualBill: 1800,
   heatingModeComparisons: [
     { co2: 500, label: 'PAC air/eau', p1: 900 },
-    { co2: 2500, label: 'Chaudière gaz condensation', p1: 1800 },
+    { co2: 2500, label: 'Chaudière gaz', p1: 1800 },
     { co2: 3200, label: 'Chaudière fioul', p1: 2200 },
   ],
   heatPumpAnnualBill: 900,
