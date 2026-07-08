@@ -77,17 +77,15 @@
   gap: 0.75rem;
 }
 
-.question-card .fr-fieldset__legend {
+.question-card .fr-fieldset__legend,
+.question-card .dpe-unknown-fieldset-element {
   flex: 0 0 100%;
 }
 
 .question-card .fr-fieldset__element--inline {
   flex: 1 1 0;
   min-width: 0;
-}
-
-.question-card .dpe-unknown-fieldset-element {
-  flex: 0 0 100%;
+  padding: 0;
 }
 
 .question-card .fr-radio-rich,
