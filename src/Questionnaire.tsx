@@ -136,7 +136,7 @@ export function Stepper({ currentStep }: { currentStep: number }) {
   const nextStepTitle = STEP_CONFIGS[currentStep]?.kicker;
 
   return (
-    <div className="fr-stepper fr-mb-0">
+    <div className="fr-stepper">
       <h2 className="fr-stepper__title">
         {currentStep === TOTAL_STEPS ? (
           <span>Vos résultats</span>

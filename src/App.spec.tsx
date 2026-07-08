@@ -14,7 +14,7 @@ describe('App', () => {
   it('renders the simulator homepage', () => {
     render(<App />);
 
-    expect(screen.getByRole('heading', { level: 1, name: /Pompe à chaleur air\/eau/i })).toBeInTheDocument();
+    expect(screen.getByText('Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Démarrer la simulation' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'France Chaleur Urbaine' })).toHaveAttribute(
       'href',
@@ -243,9 +243,9 @@ describe('App', () => {
               { co2: 3200, label: 'Chaudière fioul', p1: 2200 },
             ],
             heatPumpAnnualBill: 900,
-            heatPumpBoilerReplacementBonus: 4000,
+            heatPumpBoilerReplacementBonus: 4049,
             heatPumpGrossPrice: 14000,
-            heatPumpMaprimerenovAid: 3000,
+            heatPumpMaprimerenovAid: 3000.4,
             heatPumpNetPrice: 7000,
             heatPumpProposedPower: 8,
             oilBoilerAnnualBill: 2200,
