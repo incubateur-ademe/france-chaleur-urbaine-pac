@@ -32,7 +32,7 @@ export function CostAndAidDetails({ heatPumpNetPriceRange, result }: { heatPumpN
     },
     {
       label: 'Aides Coup de Pouce Chauffage estimées',
-      value: `- ${formatCurrency(result.heatPumpBoilerReplacementBonus, 100)}`,
+      value: `- ${formatCurrency(result.heatPumpCoupDePouce, 100)}`,
       valueClassName: 'cost-negative',
     },
     {

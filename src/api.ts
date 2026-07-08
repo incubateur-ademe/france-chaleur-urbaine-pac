@@ -27,6 +27,8 @@ type FranceRenovSpaceRow = {
   'Telephone 2 Structure': string | null;
 };
 
+type HeatingSimulationApiResult = Omit<SimulationResult, 'heatPumpNetPrice'>;
+
 export async function searchMunicipalities(location: string, signal: AbortSignal) {
   const response = await fetch(
     `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(location)}&type=municipality&autocomplete=1&limit=5`,
@@ -75,13 +77,18 @@ export async function fetchIncomeOptions(selectedLocation: LocationSuggestion, o
 }
 
 export async function fetchHeatingSimulation(formState: SimulationFormState) {
-  return postJson<SimulationResult>(`${DEFAULT_API_BASE_URL}/api/pac/simulation`, {
+  const result = await postJson<HeatingSimulationApiResult>(`${DEFAULT_API_BASE_URL}/api/pac/simulation`, {
     departmentCode: formState.selectedLocation.departmentCode,
     dpe: formState.dpe === 'unknown' ? 'D' : formState.dpe,
     incomeCategory: formState.incomeCategory,
     occupants: Number(formState.occupants),
     surface: Number(formState.surface),
   });
+
+  return {
+    ...result,
+    heatPumpNetPrice: Math.max(0, result.heatPumpGrossPrice - result.heatPumpMaprimerenovAid - result.heatPumpCoupDePouce),
+  } satisfies SimulationResult;
 }
 
 async function postJson<TResponse>(url: string, body: unknown, signal?: AbortSignal) {

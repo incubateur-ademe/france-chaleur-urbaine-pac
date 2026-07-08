@@ -243,10 +243,9 @@ describe('App', () => {
               { co2: 3200, label: 'Chaudière fioul', p1: 2200 },
             ],
             heatPumpAnnualBill: 900,
-            heatPumpBoilerReplacementBonus: 4049,
+            heatPumpCoupDePouce: 4049,
             heatPumpGrossPrice: 14000,
             heatPumpMaprimerenovAid: 3000.4,
-            heatPumpNetPrice: 7000,
             heatPumpProposedPower: 8,
             oilBoilerAnnualBill: 2200,
           })

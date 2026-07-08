@@ -48,7 +48,7 @@ export type SimulationResult = {
   gasBoilerAnnualBill: number;
   heatPumpAnnualBill: number;
   heatingModeComparisons: HeatingModeComparison[];
-  heatPumpBoilerReplacementBonus: number;
+  heatPumpCoupDePouce: number;
   heatPumpGrossPrice: number;
   heatPumpMaprimerenovAid: number;
   heatPumpNetPrice: number;
@@ -56,8 +56,8 @@ export type SimulationResult = {
 };
 
 export type IncomeOption = {
-  help?: string;
-  label: string;
+  max: number | null;
+  min: number | null;
   value: IncomeCategory;
 };
 

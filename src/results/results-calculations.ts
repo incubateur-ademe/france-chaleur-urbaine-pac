@@ -30,7 +30,8 @@ export function getAvoidedCo2(comparisons: HeatingModeComparison[]) {
 }
 
 export function getHeatPumpNetPriceRange(result: SimulationResult) {
-  const roundedAidTotal = Math.round(result.heatPumpMaprimerenovAid) + roundToNearest(result.heatPumpBoilerReplacementBonus, 100);
+  const roundedAidTotal = Math.round(result.heatPumpMaprimerenovAid) + roundToNearest(result.heatPumpCoupDePouce, 100);
+
   return {
     highValue: HEAT_PUMP_GROSS_PRICE_RANGE.highValue - roundedAidTotal,
     lowValue: HEAT_PUMP_GROSS_PRICE_RANGE.lowValue - roundedAidTotal,

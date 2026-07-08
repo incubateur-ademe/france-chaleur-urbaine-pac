@@ -12,10 +12,10 @@ const SIMULATION_RESULT = {
     { co2: 3200, label: 'Chaudière fioul', p1: 2200 },
   ],
   heatPumpAnnualBill: 900,
-  heatPumpBoilerReplacementBonus: 4049,
+  heatPumpCoupDePouce: 4049,
   heatPumpGrossPrice: 14000,
   heatPumpMaprimerenovAid: 3000.4,
-  heatPumpNetPrice: 7000,
+  heatPumpNetPrice: 6950.6,
   heatPumpProposedPower: 8,
   oilBoilerAnnualBill: 2200,
 } satisfies SimulationResult;

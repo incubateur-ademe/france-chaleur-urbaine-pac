@@ -13,6 +13,7 @@ import {
 import {
   type FormState,
   INCOME_CATEGORY_VALUES,
+  type IncomeCategory,
   type IncomeOption,
   type LocationSuggestion,
   type QuestionnaireChoice,
@@ -55,7 +56,7 @@ export function Questionnaire({
   const activeQuestionRef = useRef<HTMLElement>(null);
   const recommendationCalloutRef = useRef<HTMLDivElement>(null);
   const resultActionCalloutRef = useRef<HTMLDivElement>(null);
-  const displayedIncomeOptions = incomeOptions.length > 0 ? incomeOptions : getFallbackIncomeOptions();
+  const displayedIncomeOptions = incomeOptions.length > 0 ? incomeOptions.map(toIncomeChoiceOption) : getFallbackIncomeOptions();
   const isNextDisabled = getIsNextDisabled(currentStep, formState);
   const recommendationOutcome = getRecommendationOutcome(currentStep, routeOutcome);
   const completedStepSummaries = getCompletedStepSummaries(formState, currentStep);
@@ -158,7 +159,7 @@ export function Stepper({ currentStep }: { currentStep: number }) {
 
 type ActiveStepRenderProps = {
   currentStep: number;
-  displayedIncomeOptions: IncomeOption[];
+  displayedIncomeOptions: IncomeChoiceOption[];
   formState: FormState;
   isIncomeOptionsLoading: boolean;
   isLocationLoading: boolean;
@@ -565,6 +566,43 @@ function getFallbackIncomeOptions() {
     label: incomeCategory,
     value: incomeCategory,
   }));
+}
+
+type IncomeChoiceOption = {
+  help?: string;
+  label: string;
+  value: IncomeCategory;
+};
+
+function toIncomeChoiceOption(incomeOption: IncomeOption): IncomeChoiceOption {
+  return {
+    label: formatIncomeOptionLabel(incomeOption),
+    value: incomeOption.value,
+  };
+}
+
+function formatIncomeOptionLabel(incomeOption: IncomeOption) {
+  if (incomeOption.min === null && incomeOption.max !== null) {
+    return `inférieur à ${formatCurrency(incomeOption.max + 1)}`;
+  }
+
+  if (incomeOption.min !== null && incomeOption.max === null) {
+    return `supérieur à ${formatCurrency(incomeOption.min - 1)}`;
+  }
+
+  if (incomeOption.min !== null && incomeOption.max !== null) {
+    return `de ${formatCurrency(incomeOption.min)} à ${formatCurrency(incomeOption.max)}`;
+  }
+
+  return incomeOption.value;
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('fr-FR', {
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+    style: 'currency',
+  }).format(value);
 }
 
 function getIsNextDisabled(currentStep: number, formState: FormState) {
