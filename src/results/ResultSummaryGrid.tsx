@@ -6,6 +6,7 @@ import type { SimulationResult } from '@/types';
 
 import { HEAT_PUMP_GROSS_PRICE_RANGE } from './constants';
 import { formatCurrencyValueRange, formatNumber, formatRoundedCurrencyRange } from './formatters';
+import { getEstimatedPaybackYearRange } from './results-calculations';
 import type { CurrencyRange } from './types';
 
 type ResultSummaryGridProps = {
@@ -16,12 +17,14 @@ type ResultSummaryGridProps = {
 };
 
 export function ResultSummaryGrid({ annualSavings, avoidedCo2, heatPumpNetPriceRange, result }: ResultSummaryGridProps) {
+  const estimatedPaybackYearRange = getEstimatedPaybackYearRange(heatPumpNetPriceRange, annualSavings);
+
   return (
     <div className="summary-grid">
       <SummaryCard
         description={
           <>
-            sur un prix de la PAC air/eau estimé de ${formatCurrencyValueRange(HEAT_PUMP_GROSS_PRICE_RANGE)}
+            sur un prix de la PAC air/eau estimé de {formatCurrencyValueRange(HEAT_PUMP_GROSS_PRICE_RANGE)}
             <span aria-describedby="tooltip-pac" className="fr-icon--sm fr-icon-information-fill fr-ml-1v" />
             <span className="fr-tooltip fr-placement" id="tooltip-pac" role="tooltip">
               sources :{' '}
@@ -38,7 +41,7 @@ export function ResultSummaryGrid({ annualSavings, avoidedCo2, heatPumpNetPriceR
       <SummaryCard
         description={
           <>
-            sur vos factures, soit un investissement amorti en ≈ 10 ans
+            sur vos factures{getPaybackText(estimatedPaybackYearRange)}
             <span aria-describedby="tooltip" className="fr-icon--sm fr-icon-information-fill fr-ml-1v" />
             <span className="fr-tooltip fr-placement" id="tooltip" role="tooltip">
               En comparaison d'un remplacement de votre chaudière à l'identique
@@ -104,4 +107,13 @@ function getSummaryCardIcon(variant: SummaryCardProps['variant']) {
 
 function SummaryCardPictogram({ svgContent }: { svgContent: string }) {
   return <span className="fr-artwork summary-card-picto" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgContent }} />;
+}
+
+function getPaybackText(estimatedPaybackYearRange: CurrencyRange | null) {
+  return (
+    estimatedPaybackYearRange &&
+    `, soit un investissement amorti en ≈ ${formatNumber(estimatedPaybackYearRange.lowValue)} à ${formatNumber(
+      estimatedPaybackYearRange.highValue
+    )} ans`
+  );
 }

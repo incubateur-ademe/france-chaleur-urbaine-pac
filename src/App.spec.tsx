@@ -274,5 +274,6 @@ describe('App', () => {
     expect(screen.getAllByRole('link', { name: '05 59 00 00 00' })).toHaveLength(2);
     expect(screen.getAllByText(/12\s000 à 17\s000 €/)).toHaveLength(2);
     expect(screen.getAllByText(/5\s000 à 10\s000 €/)).toHaveLength(3);
+    expect(screen.getByText(/amorti en ≈ 6 à 11 ans/)).toBeInTheDocument();
   });
 });

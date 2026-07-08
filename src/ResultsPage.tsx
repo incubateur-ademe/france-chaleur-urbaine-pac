@@ -5,7 +5,7 @@ import { CostAndAidDetails } from '@/results/CostAndAidDetails';
 import { FifteenYearComparison } from '@/results/FifteenYearComparison';
 import { MethodNotes } from '@/results/MethodNotes';
 import { ResultSummaryGrid } from '@/results/ResultSummaryGrid';
-import { getAnnualBillRows, getAnnualSavings, getAvoidedCo2, getHeatPumpNetPriceRange } from '@/results/results-calculations';
+import { getAnnualBillRows, getAvoidedCo2, getHeatPumpNetPriceRange } from '@/results/results-calculations';
 
 import { RESULT_STEP } from './questionnaire';
 import type { FormState, FranceRenovSpace, HeatingEquipment, SimulationResult } from './types';
@@ -83,7 +83,7 @@ function ResultsContent({
 }: ResultsContentProps) {
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
   const completedStepSummaries = getCompletedStepSummaries(formState, RESULT_STEP);
-  const annualSavings = getAnnualSavings(annualBillRows, result.heatPumpAnnualBill);
+  const annualSavings = annualBillRows[0].amount - result.heatPumpAnnualBill;
   const avoidedCo2 = getAvoidedCo2(result.heatingModeComparisons);
   const heatPumpNetPriceRange = getHeatPumpNetPriceRange(result);
 

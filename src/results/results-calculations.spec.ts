@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { SimulationResult } from '@/types';
 
-import { getAnnualBillRows, getAnnualSavings, getAvoidedCo2, getHeatPumpNetPriceRange } from './results-calculations';
+import { getAnnualBillRows, getAvoidedCo2, getEstimatedPaybackYearRange, getHeatPumpNetPriceRange } from './results-calculations';
 
 const SIMULATION_RESULT = {
   gasBoilerAnnualBill: 1800,
@@ -35,10 +35,17 @@ describe('results calculations', () => {
       { amount: 1800, co2: 2500, label: 'Chaudière gaz' },
       { amount: 900, co2: 500, label: 'PAC air/eau' },
     ]);
-    expect(getAnnualSavings(annualBillRows, SIMULATION_RESULT.heatPumpAnnualBill)).toBe(900);
   });
 
   it('computes avoided CO2 against the highest emitting boiler comparison', () => {
     expect(getAvoidedCo2(SIMULATION_RESULT.heatingModeComparisons)).toBe(2700);
+  });
+
+  it('computes estimated payback years from the low and high net prices and annual savings', () => {
+    expect(getEstimatedPaybackYearRange({ highValue: 10000, lowValue: 5000 }, 900)).toEqual({
+      highValue: 11,
+      lowValue: 6,
+    });
+    expect(getEstimatedPaybackYearRange({ highValue: 10000, lowValue: 5000 }, 0)).toBeNull();
   });
 });

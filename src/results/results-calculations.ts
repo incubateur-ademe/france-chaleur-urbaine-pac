@@ -20,27 +20,32 @@ export function getAnnualBillRows(result: SimulationResult, currentHeatingEquipm
   ] satisfies AnnualBillRow[];
 }
 
-export function getAnnualSavings(annualBillRows: AnnualBillRow[], heatPumpAnnualBill: number) {
-  return annualBillRows[0].amount - heatPumpAnnualBill;
-}
-
 export function getAvoidedCo2(comparisons: HeatingModeComparison[]) {
   const heatPumpComparison = comparisons.find((comparison) => comparison.label === HEAT_PUMP_LABEL);
   const boilerComparisonWithHighestCo2 = comparisons
     .filter((comparison) => comparison.label !== HEAT_PUMP_LABEL)
     .sort((firstComparison, secondComparison) => secondComparison.co2 - firstComparison.co2)[0];
 
-  return heatPumpComparison && boilerComparisonWithHighestCo2
-    ? Math.max(boilerComparisonWithHighestCo2.co2 - heatPumpComparison.co2, 0)
-    : 0;
+  return heatPumpComparison && boilerComparisonWithHighestCo2 ? boilerComparisonWithHighestCo2.co2 - heatPumpComparison.co2 : 0;
 }
 
 export function getHeatPumpNetPriceRange(result: SimulationResult) {
   const roundedAidTotal = getRoundedAidTotal(result);
 
   return {
-    highValue: Math.max(HEAT_PUMP_GROSS_PRICE_RANGE.highValue - roundedAidTotal, 0),
-    lowValue: Math.max(HEAT_PUMP_GROSS_PRICE_RANGE.lowValue - roundedAidTotal, 0),
+    highValue: HEAT_PUMP_GROSS_PRICE_RANGE.highValue - roundedAidTotal,
+    lowValue: HEAT_PUMP_GROSS_PRICE_RANGE.lowValue - roundedAidTotal,
+  } satisfies CurrencyRange;
+}
+
+export function getEstimatedPaybackYearRange(heatPumpNetPriceRange: CurrencyRange, annualSavings: number) {
+  if (annualSavings <= 0) {
+    return null;
+  }
+
+  return {
+    highValue: Math.round(heatPumpNetPriceRange.highValue / annualSavings),
+    lowValue: Math.round(heatPumpNetPriceRange.lowValue / annualSavings),
   } satisfies CurrencyRange;
 }
 
