@@ -245,9 +245,9 @@ describe('App', () => {
             ],
             heatPumpAnnualBill: 900,
             heatPumpBoilerReplacementBonus: 4000,
-            heatPumpGrossPrice: 15000,
+            heatPumpGrossPrice: 14000,
             heatPumpMaprimerenovAid: 3000,
-            heatPumpNetPrice: 12000,
+            heatPumpNetPrice: 7000,
             heatPumpProposedPower: 8,
             oilBoilerAnnualBill: 2200,
           })
@@ -267,6 +267,7 @@ describe('App', () => {
     expect(screen.getByText('Classe D')).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText('Espace Conseil France Rénov’ Pays Basque')).toHaveLength(2));
     expect(screen.getAllByRole('link', { name: '05 59 00 00 00' })).toHaveLength(2);
-    expect(screen.getAllByText(/7\s000 à 9\s000 €/)).toHaveLength(3);
+    expect(screen.getAllByText(/12\s000 à 17\s000 €/)).toHaveLength(2);
+    expect(screen.getAllByText(/5\s000 à 10\s000 €/)).toHaveLength(3);
   });
 });

@@ -1,6 +1,6 @@
 export const OWNER_STATUS_VALUES = ['owner', 'tenant'] as const;
 export const HOUSING_TYPE_VALUES = ['house', 'apartment'] as const;
-export const HEATING_EQUIPMENT_VALUES = ['gas-boiler', 'oil-boiler', 'electric-radiator'] as const;
+export const HEATING_EQUIPMENT_VALUES = ['gas-boiler', 'oil-boiler', 'electric-radiator', 'other'] as const;
 export const DPE_VALUES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'unknown'] as const;
 export const INCOME_CATEGORY_VALUES = ['Très modeste', 'Modeste', 'Intermédiaire', 'Supérieur'] as const;
 

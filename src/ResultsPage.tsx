@@ -10,6 +10,10 @@ import { RESULT_STEP } from './questionnaire';
 import type { FormState, FranceRenovSpace, HeatingEquipment, HeatingModeComparison, SimulationResult } from './types';
 
 const BOILER_REPLACEMENT_PRICE = 5000;
+const HEAT_PUMP_GROSS_PRICE_RANGE = {
+  highValue: 17000,
+  lowValue: 12000,
+} satisfies CurrencyRange;
 
 type ResultsPageProps = {
   currentHeatingEquipment: HeatingEquipment | null;
@@ -78,38 +82,55 @@ function Results({
     .sort((firstComparison, secondComparison) => secondComparison.co2 - firstComparison.co2)[0];
   const avoidedCo2 =
     heatPumpComparison && boilerComparisonWithHighestCo2 ? Math.max(boilerComparisonWithHighestCo2.co2 - heatPumpComparison.co2, 0) : 0;
-  const heatPumpNetPrice = getHeatPumpNetPrice(result);
+  const heatPumpNetPriceRange = getHeatPumpNetPriceRange(result);
 
   return (
     <section className="simulation-summary">
       <Stepper currentStep={8} />
       <ResultAnswersSummary summaries={completedStepSummaries} onEditStep={onEditStep} />
       <p className="fr-text--lg fr-mb-0">
-        En remplaçant votre <strong>chaudière à gaz</strong> par une <strong>pompe à chaleur air/eau</strong>, veuillez-trouver-ci dessous
-        les gains économiques et écologiques pour une maison individuelle de {surface} m².
+        En remplaçant{' '}
+        {currentHeatingEquipment === 'oil-boiler' ? (
+          <>
+            votre <strong>chaudière à fioul</strong>
+          </>
+        ) : currentHeatingEquipment === 'gas-boiler' ? (
+          <>
+            votre <strong>chaudière à gaz</strong>
+          </>
+        ) : (
+          <>
+            une <strong>chaudière à gaz</strong>
+          </>
+        )}{' '}
+        par une <strong>pompe à chaleur air/eau</strong>, veuillez trouver ci-dessous les gains économiques et écologiques pour une maison
+        individuelle de {surface} m².
       </p>
-      <ResultSummaryGrid result={result} annualSavings={annualSavings} avoidedCo2={avoidedCo2} heatPumpNetPrice={heatPumpNetPrice} />
-      <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
-      <CostAndAidDetails result={result} heatPumpNetPrice={heatPumpNetPrice} />
-      <AnnualBillsChart annualBillRows={annualBillRows} maxAnnualBill={maxAnnualBill} />
-      <FifteenYearComparison
+      <ResultSummaryGrid
         annualSavings={annualSavings}
-        boilerAnnualBill={boilerAverageAnnualBill}
-        heatPumpAnnualBill={result.heatPumpAnnualBill}
-        heatPumpNetPrice={heatPumpNetPrice}
+        avoidedCo2={avoidedCo2}
+        heatPumpNetPriceRange={heatPumpNetPriceRange}
+        result={result}
       />
+      <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
+      <CostAndAidDetails result={result} heatPumpNetPriceRange={heatPumpNetPriceRange} />
+      <AnnualBillsChart {...{ annualBillRows, currentHeatingEquipment, maxAnnualBill }} />
+      {currentHeatingEquipment !== 'oil-boiler' && (
+        <FifteenYearComparison
+          annualSavings={annualSavings}
+          boilerAnnualBill={boilerAverageAnnualBill}
+          heatPumpAnnualBill={result.heatPumpAnnualBill}
+          heatPumpNetPriceRange={heatPumpNetPriceRange}
+          currentHeatingEquipment={currentHeatingEquipment}
+        />
+      )}
       <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
       <MethodNotes />
     </section>
   );
 }
 
-type ResultAnswersSummaryProps = {
-  summaries: CompletedStepSummary[];
-  onEditStep: (step: number) => void;
-};
-
-function ResultAnswersSummary({ summaries, onEditStep }: ResultAnswersSummaryProps) {
+function ResultAnswersSummary({ summaries, onEditStep }: { summaries: CompletedStepSummary[]; onEditStep: (step: number) => void }) {
   return (
     <section className="result-answers" aria-labelledby="result-answers-title">
       <h2 className="fr-h6 fr-mb-0" id="result-answers-title">
@@ -127,20 +148,20 @@ function ResultAnswersSummary({ summaries, onEditStep }: ResultAnswersSummaryPro
 function ResultSummaryGrid({
   annualSavings,
   avoidedCo2,
-  heatPumpNetPrice,
+  heatPumpNetPriceRange,
   result,
 }: {
   annualSavings: number;
   avoidedCo2: number;
-  heatPumpNetPrice: number;
+  heatPumpNetPriceRange: CurrencyRange;
   result: SimulationResult;
 }) {
   return (
     <div className="summary-grid">
       <SummaryCard
-        description={`sur un prix de la PAC air/eau moyen entre ${formatCurrencyRange(result.heatPumpGrossPrice, 1000)}`}
+        description={`sur un prix de la PAC air/eau estimé de ${formatCurrencyValueRange(HEAT_PUMP_GROSS_PRICE_RANGE)}`}
         label="Coût d’installation (aides déduites)"
-        value={formatCurrencyRange(heatPumpNetPrice, 1000)}
+        value={formatCurrencyValueRange(heatPumpNetPriceRange)}
         variant="primary"
       />
       <SummaryCard
@@ -155,7 +176,7 @@ function ResultSummaryGrid({
         }
         label="Économies sur vos factures"
         suffix="/ an"
-        value={`- ${formatCurrencyRange(annualSavings, 100)}`}
+        value={`- ${formatRoundedCurrencyRange(annualSavings, 100)}`}
         variant="saving"
       />
       <SummaryCard
@@ -210,20 +231,17 @@ function getSummaryCardIcon(variant: SummaryCardProps['variant']) {
   return null;
 }
 
-type SummaryCardPictogramProps = {
-  svgContent: string;
-};
-
-function SummaryCardPictogram({ svgContent }: SummaryCardPictogramProps) {
+function SummaryCardPictogram({ svgContent }: { svgContent: string }) {
   return <span className="fr-artwork summary-card-picto" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgContent }} />;
 }
 
-type AdvisorCalloutProps = {
+function AdvisorCallout({
+  franceRenovSpace,
+  isFranceRenovSpaceLoading,
+}: {
   franceRenovSpace: FranceRenovSpace | null;
   isFranceRenovSpaceLoading: boolean;
-};
-
-function AdvisorCallout({ franceRenovSpace, isFranceRenovSpaceLoading }: AdvisorCalloutProps) {
+}) {
   return (
     <aside className="advisor-callout" aria-label="Accompagnement France Rénov’">
       <div>
@@ -310,11 +328,11 @@ function AdvisorDetails({ franceRenovSpace }: { franceRenovSpace: FranceRenovSpa
   );
 }
 
-function CostAndAidDetails({ heatPumpNetPrice, result }: { heatPumpNetPrice: number; result: SimulationResult }) {
+function CostAndAidDetails({ heatPumpNetPriceRange, result }: { heatPumpNetPriceRange: CurrencyRange; result: SimulationResult }) {
   const costRows = [
     {
-      label: "Prix moyen d'une PAC air/eau (coût d'installation)",
-      value: formatCurrencyRange(result.heatPumpGrossPrice, 1000),
+      label: "Prix d'une PAC air/eau (coût d'installation)",
+      value: formatCurrencyValueRange(HEAT_PUMP_GROSS_PRICE_RANGE),
       valueClassName: 'cost-positive',
     },
     {
@@ -330,7 +348,7 @@ function CostAndAidDetails({ heatPumpNetPrice, result }: { heatPumpNetPrice: num
     {
       label: 'Reste à charge estimé',
       rowClassName: 'cost-row-total fr-text--bold',
-      value: formatCurrencyRange(heatPumpNetPrice, 1000),
+      value: formatCurrencyValueRange(heatPumpNetPriceRange),
       valueClassName: 'cost-total',
     },
   ] satisfies CostRow[];
@@ -367,6 +385,11 @@ type CostRow = {
   valueClassName: string;
 };
 
+type CurrencyRange = {
+  highValue: number;
+  lowValue: number;
+};
+
 type AnnualBillRow = {
   amount: number;
   colorClassName: string;
@@ -377,13 +400,22 @@ type AnnualBillRow = {
   label: string;
 };
 
-function AnnualBillsChart({ annualBillRows, maxAnnualBill }: { annualBillRows: AnnualBillRow[]; maxAnnualBill: number }) {
+function AnnualBillsChart({
+  annualBillRows,
+  maxAnnualBill,
+  currentHeatingEquipment,
+}: {
+  annualBillRows: AnnualBillRow[];
+  maxAnnualBill: number;
+  currentHeatingEquipment: HeatingEquipment | null;
+}) {
   return (
     <section className="result-section annual-bills" aria-labelledby="annual-bills-title">
       <div className="annual-bills-heading">
         <SectionHeading iconClassName="fr-icon-line-chart-fill" title="Votre facture énergétique annuelle" />
         <span>
-          Comparaison entre votre chaudière actuelle et une PAC, <strong>chauffage et eau chaude</strong> compris, hors entretien.
+          Comparaison entre {currentHeatingEquipment === 'other' ? 'une' : 'votre'} chaudière actuelle et une PAC,{' '}
+          <strong>chauffage et eau chaude</strong> compris, hors entretien.
         </span>
       </div>
       <div className="annual-bills-list">
@@ -427,16 +459,23 @@ type FifteenYearComparisonProps = {
   annualSavings: number;
   boilerAnnualBill: number;
   heatPumpAnnualBill: number;
-  heatPumpNetPrice: number;
+  heatPumpNetPriceRange: CurrencyRange;
+  currentHeatingEquipment: HeatingEquipment | null;
 };
 
-function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnualBill, heatPumpNetPrice }: FifteenYearComparisonProps) {
+function FifteenYearComparison({
+  currentHeatingEquipment,
+  annualSavings,
+  boilerAnnualBill,
+  heatPumpAnnualBill,
+  heatPumpNetPriceRange,
+}: FifteenYearComparisonProps) {
   return (
     <section className="result-section" aria-labelledby="fifteen-year-title">
       <SectionHeading iconClassName="fr-icon-scales-3-line" title="PAC ou nouvelle chaudière : le coût sur 15 ans" />
       <p>
-        Tôt ou tard, votre chaudière devra être remplacée. À budget d’installation comparable, voici ce que chaque choix vous coûte au fil
-        des années, installation et factures cumulées.
+        Tôt ou tard, {currentHeatingEquipment === 'other' ? 'une' : 'votre'} chaudière devra être remplacée. À budget d’installation
+        comparable, voici ce que chaque choix vous coûte au fil des années, installation et factures cumulées.
       </p>
       <div className="comparison-table">
         <div className="comparison-row">
@@ -449,7 +488,7 @@ function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnual
         <div className="comparison-row">
           <span>Coût d’installation</span>
           <span>≈ {formatCurrency(BOILER_REPLACEMENT_PRICE)}</span>
-          <span className="comparison-pac-cell">{formatCurrencyRange(heatPumpNetPrice, 1000)}</span>
+          <span className="comparison-pac-cell">{formatCurrencyValueRange(heatPumpNetPriceRange)}</span>
         </div>
         <div className="comparison-row">
           <span className="fr-text--start">Facture annuelle</span>
@@ -466,7 +505,7 @@ function FifteenYearComparison({ annualSavings, boilerAnnualBill, heatPumpAnnual
       </div>
       <div className="fr-callout fr-callout--green-emeraude" style={{ backgroundColor: '#F8FAFF' }}>
         <p>
-          <strong>la pompe à chaleur revient moins cher</strong> dès la première année. Au bout de 15 ans, vous aurez dépensé environ{' '}
+          <strong>La pompe à chaleur revient moins cher</strong> dès la première année. Au bout de 15 ans, vous aurez dépensé environ{' '}
           <strong className="fr-text-default--success">{formatCurrency(annualSavings * 15)} de moins</strong> sur vos factures qu’avec une
           nouvelle chaudière.
         </p>
@@ -543,8 +582,13 @@ function getComparisonCo2(comparisons: HeatingModeComparison[], label: string) {
   return comparisons.find((comparison) => comparison.label === label)?.co2 ?? 0;
 }
 
-function getHeatPumpNetPrice(result: SimulationResult) {
-  return result.heatPumpGrossPrice - result.heatPumpMaprimerenovAid - result.heatPumpBoilerReplacementBonus;
+function getHeatPumpNetPriceRange(result: SimulationResult) {
+  const totalAid = result.heatPumpMaprimerenovAid + result.heatPumpBoilerReplacementBonus;
+
+  return {
+    highValue: Math.max(HEAT_PUMP_GROSS_PRICE_RANGE.highValue - totalAid, 0),
+    lowValue: Math.max(HEAT_PUMP_GROSS_PRICE_RANGE.lowValue - totalAid, 0),
+  } satisfies CurrencyRange;
 }
 
 function formatCurrency(value: number) {
@@ -555,11 +599,15 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function formatCurrencyRange(value: number, roundingStep: number) {
+function formatCurrencyValueRange(currencyRange: CurrencyRange) {
+  return `${formatNumber(currencyRange.lowValue)} à ${formatCurrency(currencyRange.highValue)}`;
+}
+
+function formatRoundedCurrencyRange(value: number, roundingStep: number) {
   const lowValue = roundToNearest(value * 0.9, roundingStep);
   const highValue = roundToNearest(value * 1.1, roundingStep);
 
-  return `${formatAmount(lowValue)} à ${formatCurrency(highValue)}`;
+  return `${formatNumber(lowValue)} à ${formatCurrency(highValue)}`;
 }
 
 function formatAnnualRange(value: number) {
@@ -577,12 +625,6 @@ function formatAnnualBillRange(value: number) {
 }
 
 function formatNumber(value: number) {
-  return new Intl.NumberFormat('fr-FR', {
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function formatAmount(value: number) {
   return new Intl.NumberFormat('fr-FR', {
     maximumFractionDigits: 0,
   }).format(value);

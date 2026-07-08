@@ -148,6 +148,7 @@ export const HEATING_EQUIPMENT_STEP_CONFIG = {
     { label: 'Chaudière au gaz', value: 'gas-boiler' },
     { label: 'Chaudière au fioul', value: 'oil-boiler' },
     { label: 'Radiateur électrique', value: 'electric-radiator' },
+    { label: 'Autres', value: 'other' },
   ],
 } satisfies ChoiceStepConfig<HeatingEquipment>;
 
@@ -155,6 +156,7 @@ export const HEATING_EQUIPMENT_LABELS = {
   'electric-radiator': 'Radiateur électrique',
   'gas-boiler': 'Chaudière au gaz',
   'oil-boiler': 'Chaudière au fioul',
+  other: 'Autres',
 } satisfies Record<HeatingEquipment, string>;
 
 export const DPE_STEP_CONFIG = {
