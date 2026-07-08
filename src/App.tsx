@@ -15,7 +15,6 @@ import {
   RESULT_STEP,
 } from './questionnaire';
 import { ResultsPage } from './ResultsPage';
-import { ShareButtons } from './ShareButtons';
 import type {
   FormState,
   FranceRenovSpace,
@@ -43,7 +42,6 @@ export function App() {
 
     return serializedSearchParams ? `${window.location.pathname}?${serializedSearchParams}` : window.location.pathname;
   }, [currentStep, formState]);
-  const shareUrl = useMemo(() => `${window.location.origin}${currentPathWithSearch}`, [currentPathWithSearch]);
 
   useEffect(() => {
     window.history.replaceState(null, '', currentPathWithSearch);
@@ -186,7 +184,6 @@ export function App() {
           )}
         </div>
       )}
-      <ShareButtons url={shareUrl} />
     </main>
   );
 }
