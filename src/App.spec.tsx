@@ -16,11 +16,10 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: /Pompe à chaleur air\/eau/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Démarrer la simulation' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Partager par email' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'France Chaleur Urbaine' })).toHaveAttribute(
       'href',
-      expect.stringContaining('mailto:?subject=Simulation%20pompe%20%C3%A0%20chaleur%20air%2Feau')
+      expect.stringContaining('https://france-chaleur-urbaine.beta.gouv.fr/comparateur-couts-performances')
     );
-    expect(screen.getByRole('button', { name: 'Copier dans le presse-papier' })).toBeInTheDocument();
     expect(window.location.search).toBe('');
   });
 
@@ -265,6 +264,12 @@ describe('App', () => {
     expect(screen.getAllByRole('button', { name: 'Modifier' })).toHaveLength(8);
     expect(screen.getByText('Propriétaire')).toBeInTheDocument();
     expect(screen.getByText('Classe D')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Trouver un conseiller France Rénov’' })).toHaveLength(2);
+    expect(screen.queryByText('Espace Conseil France Rénov’ Pays Basque')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '05 59 00 00 00' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Trouver un conseiller France Rénov’' })[0]);
+
     await waitFor(() => expect(screen.getAllByText('Espace Conseil France Rénov’ Pays Basque')).toHaveLength(2));
     expect(screen.getAllByRole('link', { name: '05 59 00 00 00' })).toHaveLength(2);
     expect(screen.getAllByText(/12\s000 à 17\s000 €/)).toHaveLength(2);

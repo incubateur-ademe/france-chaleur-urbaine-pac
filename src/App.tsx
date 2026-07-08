@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import pacImageUrl from '@/assets/pac.webp';
-
 import { fetchFranceRenovSpace, fetchHeatingSimulation, fetchIncomeOptions, searchMunicipalities } from './api';
 import { HomeScreen } from './HomeScreen';
 import { Questionnaire } from './Questionnaire';
@@ -31,7 +29,8 @@ export function App() {
   const [formState, setFormState] = useState<FormState>(initialState.formState);
   const { clearLocationSuggestions, isLocationLoading, locationSuggestions } = useLocationSuggestions(formState);
   const { clearIncomeOptions, incomeOptions, isIncomeOptionsLoading } = useIncomeOptions(formState);
-  const { franceRenovSpace, isFranceRenovSpaceLoading } = useFranceRenovSpace(formState, currentStep);
+  const [isFranceRenovSpaceRequested, setIsFranceRenovSpaceRequested] = useState(false);
+  const { franceRenovSpace, isFranceRenovSpaceLoading } = useFranceRenovSpace(formState, currentStep, isFranceRenovSpaceRequested);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,6 +56,7 @@ export function App() {
 
   const handleChoiceChange = (changes: Partial<FormState>, nextStep: number) => {
     setResult(null);
+    setIsFranceRenovSpaceRequested(false);
     setFormState((previousState) => ({ ...previousState, ...changes }));
     setCurrentStep(nextStep);
   };
@@ -95,11 +95,13 @@ export function App() {
 
   const handleStep = (action: 'previous' | 'next') => {
     setResult(null);
+    setIsFranceRenovSpaceRequested(false);
     setCurrentStep(action === 'previous' ? getPreviousStep(currentStep, formState) : Math.min(currentStep + 1, RESULT_STEP));
   };
 
   const handleEditStep = (step: number) => {
     setResult(null);
+    setIsFranceRenovSpaceRequested(false);
     setCurrentStep(step);
   };
 
@@ -109,6 +111,7 @@ export function App() {
     clearLocationSuggestions();
     clearIncomeOptions();
     setResult(null);
+    setIsFranceRenovSpaceRequested(false);
   };
 
   const handleBack = () => {
@@ -118,29 +121,18 @@ export function App() {
     }
     if (currentStep === 1) {
       setResult(null);
+      setIsFranceRenovSpaceRequested(false);
       setFormState(INITIAL_FORM_STATE);
       setCurrentStep(0);
       return;
     }
     setResult(null);
+    setIsFranceRenovSpaceRequested(false);
     setCurrentStep(getPreviousStep(currentStep, formState));
   };
   const isResultStep = currentStep === RESULT_STEP;
   return (
     <main className="simulator-pac">
-      <div className={isResultStep ? 'fr-grid-row fr-grid-row--middle fr-grid-row--gutters' : ''}>
-        <div className={isResultStep ? 'fr-col' : ''}>
-          <h1 className="fr-h3">
-            Vous avez une chaudière au gaz ou au fioul ?<br />
-            Combien ça coûte et combien on économise avec une pompe à chaleur air/eau ?
-          </h1>
-        </div>
-        {isResultStep && (
-          <div className="fr-col-auto">
-            <img src={pacImageUrl} width={120} height={168} alt="PAC air-eau" />
-          </div>
-        )}
-      </div>
       {!isResultStep && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
       {currentStep === 0 && <HomeScreen onStart={() => setCurrentStep(1)} />}
       {isResultStep && (
@@ -148,11 +140,13 @@ export function App() {
           currentHeatingEquipment={formState.heatingEquipment}
           formState={formState}
           franceRenovSpace={franceRenovSpace}
+          isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
           isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
           isSubmitting={isSubmitting}
           result={result}
           surface={formState.surface}
           onEditStep={handleEditStep}
+          onFindFranceRenovSpace={() => setIsFranceRenovSpaceRequested(true)}
         />
       )}
       {currentStep > 0 && currentStep < RESULT_STEP && (
@@ -262,13 +256,13 @@ function useIncomeOptions(formState: FormState) {
   return { clearIncomeOptions, incomeOptions, isIncomeOptionsLoading };
 }
 
-function useFranceRenovSpace(formState: FormState, currentStep: number) {
+function useFranceRenovSpace(formState: FormState, currentStep: number, isFranceRenovSpaceRequested: boolean) {
   const [franceRenovSpace, setFranceRenovSpace] = useState<FranceRenovSpace | null>(null);
   const [isFranceRenovSpaceLoading, setIsFranceRenovSpaceLoading] = useState(false);
   const citycode = formState.selectedLocation?.citycode ?? '';
 
   useEffect(() => {
-    if (currentStep !== RESULT_STEP || !citycode) {
+    if (currentStep !== RESULT_STEP || !citycode || !isFranceRenovSpaceRequested) {
       setFranceRenovSpace(null);
       setIsFranceRenovSpaceLoading(false);
       return;
@@ -294,7 +288,7 @@ function useFranceRenovSpace(formState: FormState, currentStep: number) {
       });
 
     return () => abortController.abort();
-  }, [citycode, currentStep]);
+  }, [citycode, currentStep, isFranceRenovSpaceRequested]);
 
   return { franceRenovSpace, isFranceRenovSpaceLoading };
 }

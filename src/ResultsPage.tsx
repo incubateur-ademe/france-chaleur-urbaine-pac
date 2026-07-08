@@ -19,22 +19,26 @@ type ResultsPageProps = {
   currentHeatingEquipment: HeatingEquipment | null;
   formState: FormState;
   franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceRequested: boolean;
   isFranceRenovSpaceLoading: boolean;
   isSubmitting: boolean;
   result: SimulationResult | null;
   surface: string;
   onEditStep: (step: number) => void;
+  onFindFranceRenovSpace: () => void;
 };
 
 export function ResultsPage({
   currentHeatingEquipment,
   formState,
   franceRenovSpace,
+  isFranceRenovSpaceRequested,
   isFranceRenovSpaceLoading,
   isSubmitting,
   result,
   surface,
   onEditStep,
+  onFindFranceRenovSpace,
 }: ResultsPageProps) {
   return (
     <section className="step-content" aria-labelledby="step-title">
@@ -44,10 +48,12 @@ export function ResultsPage({
           currentHeatingEquipment={currentHeatingEquipment}
           formState={formState}
           franceRenovSpace={franceRenovSpace}
+          isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
           isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
           result={result}
           surface={surface}
           onEditStep={onEditStep}
+          onFindFranceRenovSpace={onFindFranceRenovSpace}
         />
       )}
     </section>
@@ -58,18 +64,22 @@ function Results({
   currentHeatingEquipment,
   formState,
   franceRenovSpace,
+  isFranceRenovSpaceRequested,
   isFranceRenovSpaceLoading,
   result,
   surface,
   onEditStep,
+  onFindFranceRenovSpace,
 }: {
   currentHeatingEquipment: HeatingEquipment | null;
   formState: FormState;
   franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceRequested: boolean;
   isFranceRenovSpaceLoading: boolean;
   result: SimulationResult;
   surface: string;
   onEditStep: (step: number) => void;
+  onFindFranceRenovSpace: () => void;
 }) {
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
   const completedStepSummaries = getCompletedStepSummaries(formState, RESULT_STEP);
@@ -112,7 +122,12 @@ function Results({
         heatPumpNetPriceRange={heatPumpNetPriceRange}
         result={result}
       />
-      <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
+      <AdvisorCallout
+        franceRenovSpace={franceRenovSpace}
+        isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
+        isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
+        onFindFranceRenovSpace={onFindFranceRenovSpace}
+      />
       <CostAndAidDetails result={result} heatPumpNetPriceRange={heatPumpNetPriceRange} />
       <AnnualBillsChart {...{ annualBillRows, currentHeatingEquipment, maxAnnualBill }} />
       {currentHeatingEquipment !== 'oil-boiler' && (
@@ -124,7 +139,12 @@ function Results({
           currentHeatingEquipment={currentHeatingEquipment}
         />
       )}
-      <AdvisorCallout franceRenovSpace={franceRenovSpace} isFranceRenovSpaceLoading={isFranceRenovSpaceLoading} />
+      <AdvisorCallout
+        franceRenovSpace={franceRenovSpace}
+        isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
+        isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
+        onFindFranceRenovSpace={onFindFranceRenovSpace}
+      />
       <MethodNotes />
     </section>
   );
@@ -235,21 +255,31 @@ function SummaryCardPictogram({ svgContent }: { svgContent: string }) {
   return <span className="fr-artwork summary-card-picto" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgContent }} />;
 }
 
+type AdvisorCalloutProps = {
+  franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceRequested: boolean;
+  isFranceRenovSpaceLoading: boolean;
+  onFindFranceRenovSpace: () => void;
+};
+
 function AdvisorCallout({
   franceRenovSpace,
+  isFranceRenovSpaceRequested,
   isFranceRenovSpaceLoading,
-}: {
-  franceRenovSpace: FranceRenovSpace | null;
-  isFranceRenovSpaceLoading: boolean;
-}) {
+  onFindFranceRenovSpace,
+}: AdvisorCalloutProps) {
   return (
     <aside className="advisor-callout" aria-label="Accompagnement France Rénov’">
       <div>
         <h3>Vous souhaitez aller plus loin ?</h3>
-        {isFranceRenovSpaceLoading ? (
+        {isFranceRenovSpaceRequested && isFranceRenovSpaceLoading ? (
           <p>Recherche du conseiller France Rénov’ de votre commune…</p>
         ) : (
-          <AdvisorDetails franceRenovSpace={franceRenovSpace} />
+          <AdvisorDetails
+            franceRenovSpace={franceRenovSpace}
+            isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
+            onFindFranceRenovSpace={onFindFranceRenovSpace}
+          />
         )}
       </div>
       <img className="advisor-logo" src={franceRenovLogoUrl} alt="France Rénov’" />
@@ -257,16 +287,28 @@ function AdvisorCallout({
   );
 }
 
-function AdvisorDetails({ franceRenovSpace }: { franceRenovSpace: FranceRenovSpace | null }) {
+type AdvisorDetailsProps = {
+  franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceRequested: boolean;
+  onFindFranceRenovSpace: () => void;
+};
+
+function AdvisorDetails({ franceRenovSpace, isFranceRenovSpaceRequested, onFindFranceRenovSpace }: AdvisorDetailsProps) {
   if (!franceRenovSpace) {
     return (
       <>
         <p>
           Un conseiller France Rénov’ vous accompagne <strong>gratuitement et en toute neutralité</strong>.
         </p>
-        <a className="fr-btn fr-btn--lg" href="https://france-renov.gouv.fr/preparer-projet/trouver-conseiller">
-          Trouver un conseiller France Rénov’
-        </a>
+        {isFranceRenovSpaceRequested ? (
+          <a className="fr-btn fr-btn--lg" href="https://france-renov.gouv.fr/preparer-projet/trouver-conseiller">
+            Trouver un conseiller France Rénov’
+          </a>
+        ) : (
+          <button className="fr-btn fr-btn--lg" type="button" onClick={onFindFranceRenovSpace}>
+            Trouver un conseiller France Rénov’
+          </button>
+        )}
       </>
     );
   }
