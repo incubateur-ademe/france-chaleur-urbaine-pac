@@ -1,3 +1,5 @@
+import type React from 'react';
+
 import type { SimulationResult } from '@/types';
 
 import { HEAT_PUMP_GROSS_PRICE_RANGE } from './constants';
@@ -8,6 +10,17 @@ import type { CurrencyRange } from './types';
 export function CostAndAidDetails({ heatPumpNetPriceRange, result }: { heatPumpNetPriceRange: CurrencyRange; result: SimulationResult }) {
   const costRows = [
     {
+      help: (
+        <>
+          <span aria-describedby="tooltip-pac2" className="fr-icon--sm fr-icon-information-fill fr-ml-1v" />
+          <span className="fr-tooltip fr-placement" id="tooltip-pac2" role="tooltip">
+            sources :{' '}
+            <a className="fr-link fr-text--sm" href="https://www.statistiques.developpement-durable.gouv.fr/media/7912/download?inline">
+              Étude SDES 2023
+            </a>
+          </span>
+        </>
+      ),
       label: "Prix d'une PAC air/eau (coût d'installation)",
       value: formatCurrencyValueRange(HEAT_PUMP_GROSS_PRICE_RANGE),
       valueClassName: 'cost-positive',
@@ -39,7 +52,9 @@ export function CostAndAidDetails({ heatPumpNetPriceRange, result }: { heatPumpN
       <div className="cost-table">
         {costRows.map((costRow) => (
           <div className={`cost-row ${costRow.rowClassName ?? ''}`} key={costRow.label}>
-            <span>{costRow.label}</span>
+            <span>
+              {costRow.label} {costRow.help}
+            </span>
             <strong className={costRow.valueClassName}>{costRow.value}</strong>
           </div>
         ))}
@@ -57,6 +72,7 @@ export function CostAndAidDetails({ heatPumpNetPriceRange, result }: { heatPumpN
 
 type CostRow = {
   label: string;
+  help?: React.ReactNode;
   rowClassName?: string;
   value: string;
   valueClassName: string;

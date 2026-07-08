@@ -19,7 +19,18 @@ export function ResultSummaryGrid({ annualSavings, avoidedCo2, heatPumpNetPriceR
   return (
     <div className="summary-grid">
       <SummaryCard
-        description={`sur un prix de la PAC air/eau estimé de ${formatCurrencyValueRange(HEAT_PUMP_GROSS_PRICE_RANGE)}`}
+        description={
+          <>
+            sur un prix de la PAC air/eau estimé de ${formatCurrencyValueRange(HEAT_PUMP_GROSS_PRICE_RANGE)}
+            <span aria-describedby="tooltip-pac" className="fr-icon--sm fr-icon-information-fill fr-ml-1v" />
+            <span className="fr-tooltip fr-placement" id="tooltip-pac" role="tooltip">
+              sources :{' '}
+              <a className="fr-link fr-text--sm" href="https://www.statistiques.developpement-durable.gouv.fr/media/7912/download?inline">
+                Étude SDES 2023
+              </a>
+            </span>
+          </>
+        }
         label="Coût d’installation (aides déduites)"
         value={formatCurrencyValueRange(heatPumpNetPriceRange)}
         variant="primary"
