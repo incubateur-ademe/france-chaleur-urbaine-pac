@@ -50,7 +50,7 @@ export function ResultSummaryGrid({ annualSavings, avoidedCo2, heatPumpNetPriceR
         }
         label="Économies sur vos factures"
         suffix="/ an"
-        value={`- ${formatRoundedCurrencyRange(annualSavings, 100)}`}
+        value={`- ${formatRoundedCurrencyRange(annualSavings, 10)}`}
         variant="saving"
       />
       <SummaryCard

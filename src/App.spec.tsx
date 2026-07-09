@@ -212,6 +212,11 @@ describe('App', () => {
       '',
       '/?step=9&situation=owner&housing=house&equipment=gas-boiler&location=64200+Biarritz&city=Biarritz&postcode=64200&citycode=64122&dpe=D&surface=100&occupants=2&incomeCategory=Modeste'
     );
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string | URL | Request) => {
@@ -259,6 +264,7 @@ describe('App', () => {
     expect(screen.getAllByRole('button', { name: 'Recommencer' })).toHaveLength(1);
     expect(screen.queryByRole('button', { name: 'Précédent' })).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Vos résultats')).toBeInTheDocument());
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' }));
     expect(screen.getByRole('heading', { name: 'Vos réponses' })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Modifier' })).toHaveLength(8);
     expect(screen.getByText('Propriétaire')).toBeInTheDocument();

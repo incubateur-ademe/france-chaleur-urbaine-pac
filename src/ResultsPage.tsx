@@ -1,3 +1,5 @@
+import { type RefObject, useEffect, useRef } from 'react';
+
 import { CompletedStepCard, type CompletedStepSummary, getCompletedStepSummaries, Stepper } from '@/Questionnaire';
 import { AdvisorCallout } from '@/results/AdvisorCallout';
 import { AnnualBillsChart } from '@/results/AnnualBillsChart';
@@ -81,17 +83,23 @@ function ResultsContent({
   onEditStep,
   onFindFranceRenovSpace,
 }: ResultsContentProps) {
+  const resultAnswersRef = useRef<HTMLElement>(null);
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
   const completedStepSummaries = getCompletedStepSummaries(formState, RESULT_STEP);
   const annualSavings = annualBillRows[0].amount - result.heatPumpAnnualBill;
   const avoidedCo2 = getAvoidedCo2(result.heatingModeComparisons);
   const heatPumpNetPriceRange = getHeatPumpNetPriceRange(result);
 
+  useEffect(() => {
+    // Results load asynchronously after entering the final step.
+    resultAnswersRef.current?.scrollIntoView({ block: 'start' });
+  }, []);
+
   return (
     <>
       <Stepper currentStep={8} />
       <section className="simulation-summary">
-        <ResultAnswersSummary summaries={completedStepSummaries} onEditStep={onEditStep} />
+        <ResultAnswersSummary resultAnswersRef={resultAnswersRef} summaries={completedStepSummaries} onEditStep={onEditStep} />
         <p className="fr-text--lg fr-mb-0">
           En remplaçant {getCurrentHeatingEquipmentText(currentHeatingEquipment)} par une <strong>pompe à chaleur air/eau</strong>, veuillez
           trouver ci-dessous les gains économiques et écologiques pour une maison individuelle de {surface} m².
@@ -132,13 +140,14 @@ function ResultsContent({
 }
 
 type ResultAnswersSummaryProps = {
+  resultAnswersRef: RefObject<HTMLElement | null>;
   summaries: CompletedStepSummary[];
   onEditStep: (step: number) => void;
 };
 
-function ResultAnswersSummary({ summaries, onEditStep }: ResultAnswersSummaryProps) {
+function ResultAnswersSummary({ resultAnswersRef, summaries, onEditStep }: ResultAnswersSummaryProps) {
   return (
-    <section className="result-answers" aria-labelledby="result-answers-title">
+    <section ref={resultAnswersRef} className="result-answers" aria-labelledby="result-answers-title">
       <h2 className="fr-h6 fr-mb-0" id="result-answers-title">
         Vos réponses
       </h2>

@@ -50,7 +50,7 @@ export function FifteenYearComparison({
           <span />
           <span className="comparison-pac-cell comparison-pac-cell-bottom">
             ≈ <strong className="fr-text--xl">{formatCurrency(annualSavings, 10)}</strong> / an d’économies annuelles
-            <small>avec l’installation d’une pompe à chaleur</small>
+            <small className="comparison-mobile-caption">avec l’installation d’une pompe à chaleur</small>
           </span>
         </div>
       </div>

@@ -167,7 +167,7 @@ export function App() {
         />
       )}
       {currentStep !== 0 && (
-        <div className="fr-grid-row fr-grid-row--middle fr-mt-10v">
+        <div className="fr-grid-row fr-grid-row--middle fr-mt-10v journey-footer-actions">
           <button className="fr-btn fr-btn--tertiary fr-btn--icon-left fr-icon-arrow-left-line fr-mr-3v" type="button" onClick={handleBack}>
             Question précédente
           </button>

@@ -10,7 +10,7 @@ const BUILD_MODES = {
     hasDsfr: true,
   },
   dev: {
-    apiBaseUrl: 'http://localhost:3000',
+    apiBaseUrl: 'https://france-chaleur-urbaine.beta.gouv.fr',
     hasDsfr: true,
   },
   prod: {
