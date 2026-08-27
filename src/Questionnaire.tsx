@@ -9,6 +9,7 @@ import {
   QUESTIONNAIRE_STEPS,
   RECOMMENDATIONS,
   TOTAL_STEPS,
+  WATTWATCHERS_URL,
 } from './constants';
 import {
   type FormState,
@@ -508,16 +509,33 @@ function RecommendationCallout({ calloutRef, outcome }: RecommendationCalloutPro
         <span className="fr-icon-info-fill fr-mr-3v" />
         {recommendation.title}
       </p>
-      <p className="fr-callout__text">
-        {recommendation.descriptionBeforeLink}{' '}
-        <a href={recommendation.url} className="fr-link" target="_blank" rel="noopener">
-          {recommendation.linkLabel}
-        </a>
-        {recommendation.descriptionAfterLink ? ` ${recommendation.descriptionAfterLink}` : ''}
-      </p>
-      <a className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line" href={recommendation.url} target="_blank" rel="noreferrer">
-        Aller sur {recommendation.ctaLabel}
-      </a>
+      {outcome === 'electric-radiator' ? (
+        <>
+          <p className="fr-callout__text">{recommendation.descriptionBeforeLink}</p>
+          <a className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line" href={recommendation.url} target="_blank" rel="noreferrer">
+            {recommendation.ctaLabel}
+          </a>
+          <a
+            className="fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+            href={WATTWATCHERS_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Optimiser ma consommation avec WattWatchers
+          </a>
+        </>
+      ) : (
+        <p className="fr-callout__text">
+          {recommendation.descriptionBeforeLink}{' '}
+          <a href={recommendation.url} className="fr-link" target="_blank" rel="noopener">
+            {recommendation.linkLabel}
+          </a>
+          {recommendation.descriptionAfterLink ? ` ${recommendation.descriptionAfterLink}` : ''}
+          <a className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line" href={recommendation.url} target="_blank" rel="noreferrer">
+            Aller sur {recommendation.ctaLabel}
+          </a>
+        </p>
+      )}
     </div>
   );
 }

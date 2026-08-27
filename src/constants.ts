@@ -11,6 +11,7 @@ import {
 
 export const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/?utm_source=electrifionslafrance';
 export const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable?utm_source=electrifionslafrance';
+export const FRANCE_RENOV_URL = 'https://france-renov.gouv.fr/preparer-projet/trouver-conseiller';
 
 export const RECOMMENDATIONS = {
   apartment: {
@@ -22,12 +23,13 @@ export const RECOMMENDATIONS = {
     url: FCU_URL,
   },
   'electric-radiator': {
-    ctaLabel: 'sur Watt Watchers',
+    ctaLabel: 'Trouver mon conseiller France Rénov’',
     descriptionAfterLink: '',
-    descriptionBeforeLink: 'Des solutions alternatives existent : pour les découvrir, rendez-vous sur',
+    descriptionBeforeLink:
+      'Pour réduire vos émissions et votre facture : optimisez votre consommation au quotidien, et faire le point sur les travaux réellement utiles dans votre logement avec un conseiller France Rénov’.',
     linkLabel: 'Watt Watchers',
     title: 'Malheureusement, l’installation d’une PAC air/eau n’est pas recommandée dans votre maison.',
-    url: WATTWATCHERS_URL,
+    url: FRANCE_RENOV_URL,
   },
   tenant: {
     ctaLabel: 'Watt Watchers',
