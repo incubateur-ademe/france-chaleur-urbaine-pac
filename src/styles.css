@@ -322,6 +322,12 @@
   fill: var(--background-action-high-blue-france);
 }
 
+.ampleur-eligibility {
+  padding: 1.75rem;
+  border-radius: 0.375rem;
+  background: #fff6d8;
+}
+
 .advisor-callout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

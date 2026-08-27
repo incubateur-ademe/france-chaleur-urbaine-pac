@@ -6,6 +6,7 @@ import { AnnualBillsChart } from '@/results/AnnualBillsChart';
 import { CostAndAidDetails } from '@/results/CostAndAidDetails';
 import { FifteenYearComparison } from '@/results/FifteenYearComparison';
 import { MethodNotes } from '@/results/MethodNotes';
+import { RenoAmpleurEligibility } from '@/results/RenoAmpleurEligibility';
 import { ResultSummaryGrid } from '@/results/ResultSummaryGrid';
 import { getAnnualBillRows, getAvoidedCo2, getHeatPumpNetPriceRange } from '@/results/results-calculations';
 
@@ -100,6 +101,7 @@ function ResultsContent({
       <Stepper currentStep={8} />
       <section className="simulation-summary">
         <ResultAnswersSummary resultAnswersRef={resultAnswersRef} summaries={completedStepSummaries} onEditStep={onEditStep} />
+        {['E', 'F', 'G'].includes(formState.dpe ?? '') && formState.incomeCategory !== 'Supérieur' && <RenoAmpleurEligibility />}
         <p className="fr-text--lg fr-mb-0">
           En remplaçant {getCurrentHeatingEquipmentText(currentHeatingEquipment)} par une <strong>pompe à chaleur air/eau</strong>, veuillez
           trouver ci-dessous les gains économiques et écologiques pour une maison individuelle de {surface} m².
