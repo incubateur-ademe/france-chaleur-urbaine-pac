@@ -92,7 +92,7 @@ describe('App', () => {
     expect(
       screen.getByText('Malheureusement, l’installation d’une PAC air/eau n’est pas recommandée dans votre maison.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Aller sur .*Watt Watchers/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Optimiser ma consommation avec WattWatchers/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continuer' })).not.toBeInTheDocument();
     expect(scrollIntoView).toHaveBeenCalledTimes(2);
   });

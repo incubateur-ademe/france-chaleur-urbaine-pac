@@ -31,7 +31,7 @@ export function CostAndAidDetails({ heatPumpNetPriceRange, result }: { heatPumpN
       valueClassName: 'cost-negative',
     },
     {
-      label: 'Aides Coup de Pouce Chauffage estimées',
+      label: 'Aides Coup de Pouce Chauffage estimées *',
       value: `- ${formatCurrency(result.heatPumpCoupDePouce, 100)}`,
       valueClassName: 'cost-negative',
     },
@@ -59,13 +59,14 @@ export function CostAndAidDetails({ heatPumpNetPriceRange, result }: { heatPumpN
           </div>
         ))}
       </div>
-      <p className="ptz fr-p-3v">
+      <p className="ptz fr-p-3v fr-m-0">
         <span className="fr-icon-info-fill fr-text-title--blue-france fr-mr-3v" aria-hidden="true" />
         Vous pouvez financer le reste à charge avec un éco-prêt à taux zéro (éco-PTZ), sans avance de trésorerie.{' '}
         <a href="https://france-renov.gouv.fr/aides/eco-pret-taux-zero" className="fr-link" target="_blank" rel="noopener">
           En savoir plus
         </a>
       </p>
+      <p className="fr-m-0">* Estimations susceptibles de varier en fonction des fournisseurs</p>
     </section>
   );
 }
