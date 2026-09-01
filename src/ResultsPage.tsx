@@ -1,5 +1,6 @@
 import { type RefObject, useEffect, useRef } from 'react';
 
+import illustrationPACUrl from '@/assets/pac.png';
 import { CompletedStepCard, type CompletedStepSummary, getCompletedStepSummaries, Stepper } from '@/Questionnaire';
 import { AdvisorCallout } from '@/results/AdvisorCallout';
 import { AnnualBillsChart } from '@/results/AnnualBillsChart';
@@ -102,10 +103,14 @@ function ResultsContent({
       <section className="simulation-summary">
         <ResultAnswersSummary resultAnswersRef={resultAnswersRef} summaries={completedStepSummaries} onEditStep={onEditStep} />
         {['E', 'F', 'G'].includes(formState.dpe ?? '') && formState.incomeCategory !== 'Supérieur' && <RenoAmpleurEligibility />}
-        <p className="fr-text--lg fr-mb-0">
-          En remplaçant {getCurrentHeatingEquipmentText(currentHeatingEquipment)} par une <strong>pompe à chaleur air/eau</strong>, veuillez
-          trouver ci-dessous les gains économiques et écologiques pour une maison individuelle de {surface} m².
-        </p>
+
+        <div className="fr-grid-row fr-grid-row--middle">
+          <p className="fr-text--lg fr-mb-0 fr-col">
+            En remplaçant {getCurrentHeatingEquipmentText(currentHeatingEquipment)} par une <strong>pompe à chaleur air/eau</strong>,
+            veuillez trouver ci-dessous les gains économiques et écologiques pour une maison individuelle de {surface} m².
+          </p>
+          <img className="fr-col-auto" src={illustrationPACUrl} alt="Illustration PAC" width="100" height="100" />
+        </div>
         <ResultSummaryGrid
           annualSavings={annualSavings}
           avoidedCo2={avoidedCo2}
