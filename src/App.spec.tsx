@@ -230,46 +230,40 @@ describe('App', () => {
       configurable: true,
       value: scrollIntoView,
     });
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: string | URL | Request) => {
-        if (String(input).includes('tabular-api.data.gouv.fr')) {
-          return new Response(
-            JSON.stringify({
-              data: [
-                {
-                  'Adresse Structure': '15 avenue de Verdun',
-                  'Code Postal Structure': '64100',
-                  'Commune Structure': 'BAYONNE',
-                  'Email Structure': 'contact@example.fr',
-                  'Nom Structure': 'Espace Conseil France Rénov’ Pays Basque',
-                  'Site Internet Structure': 'www.example.fr',
-                  'Telephone 2 Structure': null,
-                  'Telephone Structure': '0559000000',
-                },
-              ],
-            })
-          );
-        }
-
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      if (String(input).includes('/api/pac/france-renov-space')) {
         return new Response(
           JSON.stringify({
-            gasBoilerAnnualBill: 1800,
-            heatingModeComparisons: [
-              { co2: 500, label: 'PAC air/eau', p1: 900 },
-              { co2: 2500, label: 'Chaudière gaz', p1: 1800 },
-              { co2: 3200, label: 'Chaudière fioul', p1: 2200 },
-            ],
-            heatPumpAnnualBill: 900,
-            heatPumpCoupDePouce: 4049,
-            heatPumpGrossPrice: 14000,
-            heatPumpMaprimerenovAid: 3000.4,
-            heatPumpProposedPower: 8,
-            oilBoilerAnnualBill: 2200,
+            address: '15 avenue de Verdun',
+            city: 'BAYONNE',
+            email: 'contact@example.fr',
+            name: 'Espace Conseil France Rénov’ Pays Basque',
+            phone: '0559000000',
+            secondaryPhone: null,
+            website: 'www.example.fr',
+            zipcode: '64100',
           })
         );
-      }) satisfies typeof fetch
-    );
+      }
+
+      return new Response(
+        JSON.stringify({
+          gasBoilerAnnualBill: 1800,
+          heatingModeComparisons: [
+            { co2: 500, label: 'PAC air/eau', p1: 900 },
+            { co2: 2500, label: 'Chaudière gaz', p1: 1800 },
+            { co2: 3200, label: 'Chaudière fioul', p1: 2200 },
+          ],
+          heatPumpAnnualBill: 900,
+          heatPumpCoupDePouce: 4049,
+          heatPumpGrossPrice: 14000,
+          heatPumpMaprimerenovAid: 3000.4,
+          heatPumpProposedPower: 8,
+          oilBoilerAnnualBill: 2200,
+        })
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock satisfies typeof fetch);
 
     render(<App />);
 
@@ -295,6 +289,7 @@ describe('App', () => {
       })
     );
     await waitFor(() => expect(screen.getAllByText('Espace Conseil France Rénov’ Pays Basque')).toHaveLength(2));
+    expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('tabular-api.data.gouv.fr'), expect.anything());
     expect(screen.getAllByRole('link', { name: '05 59 00 00 00' })).toHaveLength(2);
     expect(screen.getAllByText(/12\s000 à 17\s000 €/)).toHaveLength(2);
     expect(screen.getAllByText(/5\s000 à 10\s000 €/)).toHaveLength(3);
