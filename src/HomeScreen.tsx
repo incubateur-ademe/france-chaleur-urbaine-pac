@@ -1,3 +1,5 @@
+import { FCU_COMPARATOR_URL } from './constants';
+
 export const HOME_FEATURES = [
   {
     description: (
@@ -30,7 +32,15 @@ export const HOME_FEATURES = [
   },
 ] as const;
 
-export function HomeScreen({ onStart }: { onStart: () => void }) {
+type HomeScreenProps = {
+  onFcuComparatorClick: () => void;
+  onStart: () => void;
+};
+
+/**
+ * Displays the simulator landing content and primary start action.
+ */
+export function HomeScreen({ onFcuComparatorClick, onStart }: HomeScreenProps) {
   return (
     <section aria-labelledby="home-title">
       <p className="fr-badge fr-badge--info fr-badge--no-icon fr-py-1v">
@@ -55,12 +65,7 @@ export function HomeScreen({ onStart }: { onStart: () => void }) {
       </button>
       <p className="fr-mt-3v">
          Pour accéder à un simulateur de solutions de chauffage économiques et durables, plus exhaustif, rendez-vous sur{' '}
-        <a
-          href="https://france-chaleur-urbaine.beta.gouv.fr/comparateur-couts-performances?utm=electrifionslafrance"
-          className="fr-link"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={FCU_COMPARATOR_URL} className="fr-link" target="_blank" rel="noreferrer" onClick={onFcuComparatorClick}>
           France Chaleur Urbaine
         </a>
         .

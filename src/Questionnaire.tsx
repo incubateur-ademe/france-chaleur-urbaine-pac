@@ -33,6 +33,7 @@ type QuestionnaireProps = {
   routeOutcome: RouteOutcome;
   onChoiceSelect: (choice: QuestionnaireChoice) => void;
   onEditStep: (step: number) => void;
+  onFcuOutboundLinkClick: (linkName: string) => void;
   onFormChange: (changes: Partial<FormState>) => void;
   onHandleStep: (action: 'previous' | 'next') => void;
   onLocationChange: (location: string) => void;
@@ -49,6 +50,7 @@ export function Questionnaire({
   routeOutcome,
   onChoiceSelect,
   onEditStep,
+  onFcuOutboundLinkClick,
   onFormChange,
   onHandleStep,
   onLocationChange,
@@ -117,7 +119,13 @@ export function Questionnaire({
             onLocationChange,
             onLocationSelect,
           })}
-          {recommendationOutcome && <RecommendationCallout calloutRef={recommendationCalloutRef} outcome={recommendationOutcome} />}
+          {recommendationOutcome && (
+            <RecommendationCallout
+              calloutRef={recommendationCalloutRef}
+              outcome={recommendationOutcome}
+              onFcuOutboundLinkClick={onFcuOutboundLinkClick}
+            />
+          )}
           {shouldShowStepAction && currentStep !== TOTAL_STEPS && (
             <StepActions isNextDisabled={isNextDisabled} nextLabel="Continuer" onHandleStep={onHandleStep} />
           )}
@@ -498,10 +506,16 @@ function StepActions({ isNextDisabled = false, nextLabel = 'Continuer', onHandle
 type RecommendationCalloutProps = {
   calloutRef: React.RefObject<HTMLDivElement | null>;
   outcome: Exclude<RouteOutcome, 'continue'>;
+  onFcuOutboundLinkClick: (linkName: string) => void;
 };
 
-function RecommendationCallout({ calloutRef, outcome }: RecommendationCalloutProps) {
+function RecommendationCallout({ calloutRef, outcome, onFcuOutboundLinkClick }: RecommendationCalloutProps) {
   const recommendation = RECOMMENDATIONS[outcome];
+  const handleFcuOutboundLinkClick = (linkName: string) => {
+    if (outcome === 'apartment') {
+      onFcuOutboundLinkClick(linkName);
+    }
+  };
 
   return (
     <div ref={calloutRef} className="fr-callout fr-callout--blue-cumulus scroll-target-callout">
@@ -527,11 +541,23 @@ function RecommendationCallout({ calloutRef, outcome }: RecommendationCalloutPro
       ) : (
         <p className="fr-callout__text">
           {recommendation.descriptionBeforeLink}{' '}
-          <a href={recommendation.url} className="fr-link" target="_blank" rel="noopener">
+          <a
+            href={recommendation.url}
+            className="fr-link"
+            target="_blank"
+            rel="noopener"
+            onClick={() => handleFcuOutboundLinkClick('recommendation_text_link')}
+          >
             {recommendation.linkLabel}
           </a>
           {recommendation.descriptionAfterLink ? ` ${recommendation.descriptionAfterLink}` : ''}
-          <a className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line" href={recommendation.url} target="_blank" rel="noreferrer">
+          <a
+            className="fr-btn fr-btn--icon-right fr-icon-arrow-right-line"
+            href={recommendation.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => handleFcuOutboundLinkClick('recommendation_cta')}
+          >
             Aller sur {recommendation.ctaLabel}
           </a>
         </p>

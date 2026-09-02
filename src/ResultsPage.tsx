@@ -25,6 +25,7 @@ type ResultsPageProps = {
   surface: string;
   onEditStep: (step: number) => void;
   onFindFranceRenovSpace: () => void;
+  onFranceRenovExternalLinkClick: () => void;
 };
 
 /**
@@ -41,6 +42,7 @@ export function ResultsPage({
   surface,
   onEditStep,
   onFindFranceRenovSpace,
+  onFranceRenovExternalLinkClick,
 }: ResultsPageProps) {
   return (
     <section className="step-content" aria-labelledby="step-title">
@@ -56,6 +58,7 @@ export function ResultsPage({
           surface={surface}
           onEditStep={onEditStep}
           onFindFranceRenovSpace={onFindFranceRenovSpace}
+          onFranceRenovExternalLinkClick={onFranceRenovExternalLinkClick}
         />
       )}
     </section>
@@ -72,6 +75,7 @@ type ResultsContentProps = {
   surface: string;
   onEditStep: (step: number) => void;
   onFindFranceRenovSpace: () => void;
+  onFranceRenovExternalLinkClick: () => void;
 };
 
 function ResultsContent({
@@ -84,6 +88,7 @@ function ResultsContent({
   surface,
   onEditStep,
   onFindFranceRenovSpace,
+  onFranceRenovExternalLinkClick,
 }: ResultsContentProps) {
   const resultAnswersRef = useRef<HTMLElement>(null);
   const annualBillRows = getAnnualBillRows(result, currentHeatingEquipment);
@@ -122,6 +127,7 @@ function ResultsContent({
           isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
           isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
           onFindFranceRenovSpace={onFindFranceRenovSpace}
+          onFranceRenovExternalLinkClick={onFranceRenovExternalLinkClick}
         />
         <CostAndAidDetails result={result} heatPumpNetPriceRange={heatPumpNetPriceRange} />
         <AnnualBillsChart annualBillRows={annualBillRows} currentHeatingEquipment={currentHeatingEquipment} />
@@ -139,6 +145,7 @@ function ResultsContent({
           isFranceRenovSpaceLoading={isFranceRenovSpaceLoading}
           isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
           onFindFranceRenovSpace={onFindFranceRenovSpace}
+          onFranceRenovExternalLinkClick={onFranceRenovExternalLinkClick}
         />
         <MethodNotes />
       </section>

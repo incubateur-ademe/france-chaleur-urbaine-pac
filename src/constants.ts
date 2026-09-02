@@ -11,6 +11,7 @@ import {
 
 export const WATTWATCHERS_URL = 'https://www.wattwatchers.fr/?utm_source=electrifionslafrance';
 export const FCU_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/chaleur-renouvelable?utm_source=electrifionslafrance';
+export const FCU_COMPARATOR_URL = 'https://france-chaleur-urbaine.beta.gouv.fr/comparateur-couts-performances?utm=electrifionslafrance';
 export const FRANCE_RENOV_URL = 'https://france-renov.gouv.fr/preparer-projet/trouver-conseiller';
 
 export const RECOMMENDATIONS = {

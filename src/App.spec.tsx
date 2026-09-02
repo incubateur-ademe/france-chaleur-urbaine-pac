@@ -1,10 +1,22 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+const trackSimulateurPacEventMock = vi.hoisted(() => vi.fn());
+
+vi.mock('./tracking', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./tracking')>();
+
+  return {
+    ...actual,
+    trackSimulateurPacEvent: trackSimulateurPacEventMock,
+  };
+});
+
 import { App } from './App';
 
 afterEach(() => {
   cleanup();
+  trackSimulateurPacEventMock.mockReset();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   window.history.replaceState(null, '', '/');
@@ -29,6 +41,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Démarrer la simulation' }));
 
     expect(window.location.search).toBe('?step=1');
+    expect(trackSimulateurPacEventMock).toHaveBeenCalledWith('simulateur_pac:form_started', expect.objectContaining({ current_step: 0 }));
     expect(screen.getByText(/Êtes-vous propriétaire/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Je suis propriétaire')).toBeInTheDocument();
   });
@@ -275,6 +288,12 @@ describe('App', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Trouver un conseiller France Rénov’' })[0]);
 
+    expect(trackSimulateurPacEventMock).toHaveBeenCalledWith(
+      'simulateur_pac:france_renov_coordinates_requested',
+      expect.objectContaining({
+        current_step: 9,
+      })
+    );
     await waitFor(() => expect(screen.getAllByText('Espace Conseil France Rénov’ Pays Basque')).toHaveLength(2));
     expect(screen.getAllByRole('link', { name: '05 59 00 00 00' })).toHaveLength(2);
     expect(screen.getAllByText(/12\s000 à 17\s000 €/)).toHaveLength(2);

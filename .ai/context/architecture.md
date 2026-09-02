@@ -13,6 +13,7 @@ This repository is a small frontend prototype. It has no server runtime, databas
 | Questionnaire constants | `src/constants.ts` | Static questionnaire labels, choices, recommendations and step metadata |
 | Questionnaire journey | `src/questionnaire.ts` | Journey state initialization, URL synchronization and route outcome helpers |
 | Results page | `src/ResultsPage.tsx` | Recommendations and simulation result presentation |
+| Tracking | `src/tracking.ts` | Anonymous PAC simulator event relay to the FCU API |
 | Shared contracts | `src/types.ts` | Domain values and types shared across the journey components |
 | Entry point | `src/main.tsx` | DSFR startup, CSS imports, React mounting |
 | Tests | `src/**/*.spec.tsx` | Component and utility tests |
@@ -25,4 +26,5 @@ This repository is a small frontend prototype. It has no server runtime, databas
 
 - Keep the app client-only unless the project explicitly gains a backend.
 - Prefer direct imports from `@betagouv/france-chaleur-urbaine-publicodes` for publicodes rules and types.
+- Keep analytics fire-and-forget through `/api/pac/events`; do not bundle third-party analytics SDKs in the widget.
 - Keep domain code in `src/` with focused files; introduce folders only when there are multiple related files.

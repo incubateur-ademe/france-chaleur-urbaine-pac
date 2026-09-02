@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { fetchFranceRenovSpace, fetchHeatingSimulation, fetchIncomeOptions, searchMunicipalities } from './api';
 import { HomeScreen } from './HomeScreen';
@@ -13,6 +13,7 @@ import {
   RESULT_STEP,
 } from './questionnaire';
 import { ResultsPage } from './ResultsPage';
+import { type SimulateurPacEventName, type SimulateurPacEventProperties, trackSimulateurPacEvent } from './tracking';
 import type {
   FormState,
   FranceRenovSpace,
@@ -33,6 +34,7 @@ export function App() {
   const { franceRenovSpace, isFranceRenovSpaceLoading } = useFranceRenovSpace(formState, currentStep, isFranceRenovSpaceRequested);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const hasTrackedFormStartedRef = useRef(false);
 
   const routeOutcome = getRouteOutcome(formState);
   const currentPathWithSearch = useMemo(() => {
@@ -54,7 +56,29 @@ export function App() {
     runSimulation(formState, setResult, setIsSubmitting);
   }, [currentStep, formState, isSubmitting, result, routeOutcome]);
 
+  const trackJourneyEvent = (event: SimulateurPacEventName, properties: SimulateurPacEventProperties = {}) => {
+    trackSimulateurPacEvent(event, {
+      ...getJourneyTrackingProperties(formState, currentStep, routeOutcome),
+      ...properties,
+    });
+  };
+
+  const trackFormStarted = () => {
+    if (hasTrackedFormStartedRef.current) {
+      return;
+    }
+
+    hasTrackedFormStartedRef.current = true;
+    trackJourneyEvent('simulateur_pac:form_started');
+  };
+
+  const handleStart = () => {
+    trackFormStarted();
+    setCurrentStep(1);
+  };
+
   const handleChoiceChange = (changes: Partial<FormState>, nextStep: number) => {
+    trackFormStarted();
     setResult(null);
     setIsFranceRenovSpaceRequested(false);
     setFormState((previousState) => ({ ...previousState, ...changes }));
@@ -81,6 +105,7 @@ export function App() {
   };
 
   const handleFormChange = (changes: Partial<FormState>) => {
+    trackFormStarted();
     setFormState((previousState) => ({ ...previousState, ...changes }));
   };
 
@@ -94,18 +119,27 @@ export function App() {
   };
 
   const handleStep = (action: 'previous' | 'next') => {
+    if (action === 'next') {
+      trackFormStarted();
+      if (currentStep === RESULT_STEP - 1) {
+        trackJourneyEvent('simulateur_pac:results_requested');
+      }
+    }
+
     setResult(null);
     setIsFranceRenovSpaceRequested(false);
     setCurrentStep(action === 'previous' ? getPreviousStep(currentStep, formState) : Math.min(currentStep + 1, RESULT_STEP));
   };
 
   const handleEditStep = (step: number) => {
+    trackFormStarted();
     setResult(null);
     setIsFranceRenovSpaceRequested(false);
     setCurrentStep(step);
   };
 
   const handleRestart = () => {
+    hasTrackedFormStartedRef.current = false;
     setCurrentStep(1);
     setFormState(INITIAL_FORM_STATE);
     clearLocationSuggestions();
@@ -114,12 +148,34 @@ export function App() {
     setIsFranceRenovSpaceRequested(false);
   };
 
+  const handleFindFranceRenovSpace = () => {
+    trackJourneyEvent('simulateur_pac:france_renov_coordinates_requested');
+    setIsFranceRenovSpaceRequested(true);
+  };
+
+  const handleFranceRenovExternalLinkClick = () => {
+    trackJourneyEvent('simulateur_pac:france_renov_external_link_clicked');
+  };
+
+  const handleFcuComparatorClick = () => {
+    trackJourneyEvent('simulateur_pac:fcu_outbound_link_clicked', {
+      link_name: 'homepage_comparator',
+    });
+  };
+
+  const handleFcuChaleurRenouvelableClick = (linkName: string) => {
+    trackJourneyEvent('simulateur_pac:fcu_outbound_link_clicked', {
+      link_name: linkName,
+    });
+  };
+
   const handleBack = () => {
     if (currentStep === 0) {
       window.history.back();
       return;
     }
     if (currentStep === 1) {
+      hasTrackedFormStartedRef.current = false;
       setResult(null);
       setIsFranceRenovSpaceRequested(false);
       setFormState(INITIAL_FORM_STATE);
@@ -134,7 +190,7 @@ export function App() {
   return (
     <main className="simulator-pac">
       {!isResultStep && <p>Quelques questions sur votre logement pour estimer le coût, les aides et vos économies.</p>}
-      {currentStep === 0 && <HomeScreen onStart={() => setCurrentStep(1)} />}
+      {currentStep === 0 && <HomeScreen onStart={handleStart} onFcuComparatorClick={handleFcuComparatorClick} />}
       {isResultStep && (
         <ResultsPage
           currentHeatingEquipment={formState.heatingEquipment}
@@ -146,7 +202,8 @@ export function App() {
           result={result}
           surface={formState.surface}
           onEditStep={handleEditStep}
-          onFindFranceRenovSpace={() => setIsFranceRenovSpaceRequested(true)}
+          onFindFranceRenovSpace={handleFindFranceRenovSpace}
+          onFranceRenovExternalLinkClick={handleFranceRenovExternalLinkClick}
         />
       )}
       {currentStep > 0 && currentStep < RESULT_STEP && (
@@ -161,6 +218,7 @@ export function App() {
           onFormChange={handleFormChange}
           onChoiceSelect={handleQuestionnaireChoice}
           onEditStep={handleEditStep}
+          onFcuOutboundLinkClick={handleFcuChaleurRenouvelableClick}
           onHandleStep={handleStep}
           onLocationChange={handleLocationChange}
           onLocationSelect={handleLocationSelect}
@@ -180,6 +238,22 @@ export function App() {
       )}
     </main>
   );
+}
+
+function getJourneyTrackingProperties(
+  formState: FormState,
+  currentStep: number,
+  routeOutcome: SimulateurPacEventProperties['route_outcome']
+) {
+  return {
+    current_step: currentStep,
+    department_code: formState.selectedLocation?.departmentCode,
+    dpe: formState.dpe ?? undefined,
+    heating_equipment: formState.heatingEquipment ?? undefined,
+    housing_type: formState.housingType ?? undefined,
+    owner_status: formState.ownerStatus ?? undefined,
+    route_outcome: routeOutcome,
+  } satisfies SimulateurPacEventProperties;
 }
 
 function useLocationSuggestions(formState: FormState) {

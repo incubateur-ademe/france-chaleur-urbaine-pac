@@ -1,4 +1,5 @@
 import franceRenovLogoUrl from '@/assets/france-renov-logo.svg';
+import { FRANCE_RENOV_URL } from '@/constants';
 import type { FranceRenovSpace } from '@/types';
 
 import { formatPhoneNumber, getExternalUrl } from './formatters';
@@ -8,13 +9,18 @@ type AdvisorCalloutProps = {
   isFranceRenovSpaceRequested: boolean;
   isFranceRenovSpaceLoading: boolean;
   onFindFranceRenovSpace: () => void;
+  onFranceRenovExternalLinkClick: () => void;
 };
 
+/**
+ * Presents the France Rénov' advisor lookup and contact actions.
+ */
 export function AdvisorCallout({
   franceRenovSpace,
   isFranceRenovSpaceRequested,
   isFranceRenovSpaceLoading,
   onFindFranceRenovSpace,
+  onFranceRenovExternalLinkClick,
 }: AdvisorCalloutProps) {
   return (
     <aside className="advisor-callout" aria-label="Accompagnement France Rénov’">
@@ -27,6 +33,7 @@ export function AdvisorCallout({
             franceRenovSpace={franceRenovSpace}
             isFranceRenovSpaceRequested={isFranceRenovSpaceRequested}
             onFindFranceRenovSpace={onFindFranceRenovSpace}
+            onFranceRenovExternalLinkClick={onFranceRenovExternalLinkClick}
           />
         )}
       </div>
@@ -35,15 +42,19 @@ export function AdvisorCallout({
   );
 }
 
+type AdvisorDetailsProps = {
+  franceRenovSpace: FranceRenovSpace | null;
+  isFranceRenovSpaceRequested: boolean;
+  onFindFranceRenovSpace: () => void;
+  onFranceRenovExternalLinkClick: () => void;
+};
+
 function AdvisorDetails({
   franceRenovSpace,
   isFranceRenovSpaceRequested,
   onFindFranceRenovSpace,
-}: {
-  franceRenovSpace: FranceRenovSpace | null;
-  isFranceRenovSpaceRequested: boolean;
-  onFindFranceRenovSpace: () => void;
-}) {
+  onFranceRenovExternalLinkClick,
+}: AdvisorDetailsProps) {
   if (!franceRenovSpace) {
     return (
       <>
@@ -51,7 +62,7 @@ function AdvisorDetails({
           Un conseiller France Rénov’ vous accompagne <strong>gratuitement et en toute neutralité</strong>.
         </p>
         {isFranceRenovSpaceRequested ? (
-          <a className="fr-btn fr-btn--lg" href="https://france-renov.gouv.fr/preparer-projet/trouver-conseiller">
+          <a className="fr-btn fr-btn--lg" href={FRANCE_RENOV_URL} onClick={onFranceRenovExternalLinkClick}>
             Trouver un conseiller France Rénov’
           </a>
         ) : (
@@ -113,6 +124,7 @@ function AdvisorDetails({
         href={franceRenovSpace.website ? getExternalUrl(franceRenovSpace.website) : `mailto:${franceRenovSpace.email}`}
         target={franceRenovSpace.website ? '_blank' : undefined}
         rel={franceRenovSpace.website ? 'noopener noreferrer' : undefined}
+        onClick={onFranceRenovExternalLinkClick}
       >
         Contacter mon conseiller France Rénov’
       </a>
