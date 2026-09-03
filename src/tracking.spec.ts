@@ -2,8 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createSimulateurPacEventPayload, resetSimulateurPacTrackingForTests, trackSimulateurPacEvent } from './tracking';
 
-const originalSendBeacon = navigator.sendBeacon;
-
 describe('PAC simulator tracking', () => {
   beforeEach(() => {
     resetSimulateurPacTrackingForTests();
@@ -11,39 +9,21 @@ describe('PAC simulator tracking', () => {
   });
 
   afterEach(() => {
-    Object.defineProperty(globalThis.navigator, 'sendBeacon', {
-      configurable: true,
-      value: originalSendBeacon,
-    });
     vi.unstubAllGlobals();
   });
 
   it('keeps tracking disabled in test mode by default', () => {
-    const sendBeacon = vi.fn((trackingUrl: string | URL, trackingData?: BodyInit | null) => {
-      void trackingUrl;
-      void trackingData;
-      return true;
-    });
-    Object.defineProperty(globalThis.navigator, 'sendBeacon', {
-      configurable: true,
-      value: sendBeacon,
-    });
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response());
+    vi.stubGlobal('fetch', fetchMock);
 
     trackSimulateurPacEvent('simulateur_pac:form_started', { current_step: 0 });
 
-    expect(sendBeacon).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('sends whitelisted events with page context through sendBeacon', async () => {
-    const sendBeacon = vi.fn((trackingUrl: string | URL, trackingData?: BodyInit | null) => {
-      void trackingUrl;
-      void trackingData;
-      return true;
-    });
-    Object.defineProperty(globalThis.navigator, 'sendBeacon', {
-      configurable: true,
-      value: sendBeacon,
-    });
+  it('sends whitelisted events with page context through fetch keepalive', () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response());
+    vi.stubGlobal('fetch', fetchMock);
 
     trackSimulateurPacEvent(
       'simulateur_pac:results_requested',
@@ -54,13 +34,24 @@ describe('PAC simulator tracking', () => {
       { enableInTest: true }
     );
 
-    expect(sendBeacon).toHaveBeenCalledTimes(1);
-    const beaconBody = sendBeacon.mock.calls[0]?.[1];
-    if (!(beaconBody instanceof Blob)) {
-      throw new Error('Expected tracking payload to be sent as a JSON blob');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/pac/events'),
+      expect.objectContaining({
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        keepalive: true,
+        method: 'POST',
+      })
+    );
+
+    const fetchBody = fetchMock.mock.calls[0]?.[1]?.body;
+    if (typeof fetchBody !== 'string') {
+      throw new Error('Expected tracking payload to be sent as JSON');
     }
 
-    const payload = JSON.parse(await beaconBody.text());
+    const payload = JSON.parse(fetchBody);
     expect(payload).toStrictEqual({
       distinctId: expect.any(String),
       event: 'simulateur_pac:results_requested',

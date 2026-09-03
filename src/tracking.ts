@@ -53,10 +53,6 @@ export function trackSimulateurPacEvent(
 
   const payload = JSON.stringify(createSimulateurPacEventPayload(event, properties));
 
-  if (sendWithBeacon(payload)) {
-    return;
-  }
-
   sendWithFetch(payload);
 }
 
@@ -121,14 +117,6 @@ function getHttpUrl(rawUrl: string) {
   } catch {
     return null;
   }
-}
-
-function sendWithBeacon(payload: string) {
-  if (typeof navigator !== 'object' || typeof navigator.sendBeacon !== 'function') {
-    return false;
-  }
-
-  return navigator.sendBeacon(TRACKING_ENDPOINT_URL, new Blob([payload], { type: 'application/json' }));
 }
 
 function sendWithFetch(payload: string) {
