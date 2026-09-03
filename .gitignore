@@ -46,3 +46,6 @@ tsconfig.tsbuildinfo
 # local AI config
 .ai/config.local.jsonc
 .ai/.version-check
+.vercel
+.env*
+vercel.json
