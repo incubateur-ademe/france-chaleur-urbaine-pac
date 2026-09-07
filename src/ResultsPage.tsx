@@ -109,12 +109,12 @@ function ResultsContent({
         <ResultAnswersSummary resultAnswersRef={resultAnswersRef} summaries={completedStepSummaries} onEditStep={onEditStep} />
         {['E', 'F', 'G'].includes(formState.dpe ?? '') && formState.incomeCategory !== 'Supérieur' && <RenoAmpleurEligibility />}
 
-        <div className="fr-grid-row fr-grid-row--middle">
+        <div className="fr-grid-row fr-grid-row--middle result-intro">
           <p className="fr-text--lg fr-mb-0 fr-col">
             En remplaçant {getCurrentHeatingEquipmentText(currentHeatingEquipment)} par une <strong>pompe à chaleur air/eau</strong>,
             veuillez trouver ci-dessous les gains économiques et écologiques pour une maison individuelle de {surface} m².
           </p>
-          <img className="fr-col-auto" src={illustrationPACUrl} alt="Illustration PAC" width="100" height="100" />
+          <img className="result-intro-illustration" src={illustrationPACUrl} alt="" width="101" height="100" />
         </div>
         <ResultSummaryGrid
           annualSavings={annualSavings}

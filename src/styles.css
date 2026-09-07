@@ -197,6 +197,18 @@
   gap: 2rem;
 }
 
+.result-intro {
+  gap: 1rem;
+}
+
+.result-intro-illustration {
+  flex: 0 0 5rem;
+  width: 5rem;
+  max-width: 5rem;
+  height: auto;
+  object-fit: contain;
+}
+
 .result-answers {
   display: grid;
   gap: 0.75rem;
@@ -587,6 +599,10 @@
   .annual-bill-row,
   .comparison-row {
     grid-template-columns: 1fr;
+  }
+
+  .result-intro-illustration {
+    display: none;
   }
 
   .result-answers-grid .question-card-completed-condensed {
